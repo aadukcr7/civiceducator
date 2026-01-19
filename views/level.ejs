@@ -1,0 +1,105 @@
+<%- include('partials/header', { title: level.title }) %>
+
+<main class="flex-grow-1">
+  <div class="container py-5">
+    <div class="row">
+      <!-- Sidebar Navigation -->
+      <div class="col-lg-3">
+        <div class="lesson-sidebar">
+          <h5 class="mb-3"><%= level.title %></h5>
+          <div class="lesson-list">
+            <% if (lessons && lessons.length > 0) { %>
+              <% lessons.forEach((lesson, index) => { %>
+                <a href="#lesson-<%= lesson.id %>" class="lesson-item active-lesson">
+                  <span class="lesson-number"><%= index + 1 %></span>
+                  <span class="lesson-title"><%= lesson.title %></span>
+                </a>
+              <% }); %>
+            <% } %>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Content -->
+      <div class="col-lg-9">
+        <!-- Lessons Section -->
+        <% if (lessons && lessons.length > 0) { %>
+          <% lessons.forEach((lesson, index) => { %>
+            <div class="lesson-card" id="lesson-<%= lesson.id %>">
+              <h3><%= lesson.title %></h3>
+              <p class="lesson-number">Lesson <%= index + 1 %> of <%= lessons.length %></p>
+              <div class="lesson-content">
+                <p><%= lesson.content %></p>
+              </div>
+              <% if (lesson.keyPoints && lesson.keyPoints.length > 0) { %>
+                <div class="key-points">
+                  <h5>📌 Key Points:</h5>
+                  <ul>
+                    <% lesson.keyPoints.forEach(point => { %>
+                      <li><%= point %></li>
+                    <% }); %>
+                  </ul>
+                </div>
+              <% } %>
+              <% if (lesson.articles) { %>
+                <p class="text-muted"><strong>Constitutional Reference:</strong> <%= lesson.articles %></p>
+              <% } %>
+              <% if (lesson.helpline) { %>
+                <p class="alert alert-info"><strong>📞 Important Helpline:</strong> <%= lesson.helpline %></p>
+              <% } %>
+            </div>
+          <% }); %>
+        <% } else { %>
+          <div class="lesson-card">
+            <p>No lessons available for this level.</p>
+          </div>
+        <% } %>
+
+        <!-- Quiz Section -->
+        <div class="quiz-section">
+          <h3>Take the Quiz</h3>
+          <p class="text-muted">Answer all questions. You need 70% to pass.</p>
+          
+          <form method="POST" action="/levels/<%= level.id %>/quiz" id="quizForm">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <% if (level.quiz && level.quiz.length > 0) { %>
+              <% level.quiz.forEach((question, qIndex) => { %>
+                <div class="quiz-question">
+                  <h5><strong><%= qIndex + 1 %>.</strong> <%= question.question %></h5>
+                  <% question.options.forEach((option, oIndex) => { %>
+                    <div class="form-check">
+                      <input class="form-check-input" type="radio" name="answers[q<%= question.id %>]" 
+                        id="q<%= question.id %>_<%= oIndex %>" value="<%= oIndex %>" required>
+                      <label class="form-check-label" for="q<%= question.id %>_<%= oIndex %>">
+                        <%= option %>
+                      </label>
+                    </div>
+                  <% }); %>
+                </div>
+              <% }); %>
+              
+              <button type="submit" class="btn btn-primary btn-lg mt-4">Submit Quiz</button>
+            <% } else { %>
+              <p class="alert alert-warning">No quiz available for this level yet.</p>
+            <% } %>
+          </form>
+        </div>
+
+        <!-- Progress Info -->
+        <% if (progress && progress.completed) { %>
+          <div class="alert alert-success mt-4">
+            <strong>✓ You have completed this level!</strong><br>
+            Score: <%= progress.score %>% | Date: <%= new Date(progress.completed_at).toLocaleDateString() %>
+          </div>
+        <% } %>
+      </div>
+    </div>
+
+    <!-- Back Button -->
+    <div class="mt-4">
+      <a href="/levels" class="btn btn-outline-secondary">← Back to Levels</a>
+    </div>
+  </div>
+</main>
+
+<%- include('partials/footer') %>

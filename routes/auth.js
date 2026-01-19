@@ -1,0 +1,154 @@
+const express = require('express');
+const { body, validationResult } = require('express-validator');
+const User = require('../models/User');
+const { isAuthenticated, isNotAuthenticated } = require('../middleware/auth');
+
+const router = express.Router();
+
+// Register page (GET)
+router.get('/register', isNotAuthenticated, (req, res) => {
+  res.render('register', { errors: [], old: {} });
+});
+
+// Register (POST)
+router.post(
+  '/register',
+  isNotAuthenticated,
+  [
+    body('username')
+      .trim()
+      .isLength({ min: 3, max: 20 })
+      .withMessage('Username must be 3-20 characters')
+      .matches(/^[a-zA-Z0-9_]+$/)
+      .withMessage('Username can only contain letters, numbers, and underscores'),
+    body('email').trim().isEmail().withMessage('Invalid email address').normalizeEmail(),
+    body('password')
+      .isLength({ min: 8 })
+      .withMessage('Password must be at least 8 characters')
+      .custom((value) => /[A-Z]/.test(value))
+      .withMessage('Password must include at least one uppercase letter')
+      .custom((value) => /[a-z]/.test(value))
+      .withMessage('Password must include at least one lowercase letter')
+      .custom((value) => /\d/.test(value))
+      .withMessage('Password must include at least one number')
+      .custom((value) => /[^A-Za-z0-9]/.test(value))
+      .withMessage('Password must include at least one special character')
+      .custom((value) => !/\s/.test(value))
+      .withMessage('Password must not contain spaces'),
+    body('confirmPassword')
+      .custom((value, { req }) => value === req.body.password)
+      .withMessage('Passwords do not match'),
+  ],
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.render('register', {
+          errors: errors.array(),
+          old: { username: req.body.username, email: req.body.email },
+        });
+      }
+
+      const { username, email, password } = req.body;
+
+      // Check if user already exists
+      const existingUser = await User.findByEmail(email);
+      if (existingUser) {
+        return res.render('register', {
+          errors: [{ msg: 'Email already registered' }],
+          old: { username, email },
+        });
+      }
+
+      const existingUsername = await User.findByUsername(username);
+      if (existingUsername) {
+        return res.render('register', {
+          errors: [{ msg: 'Username already taken' }],
+          old: { username, email },
+        });
+      }
+
+      // Create new user
+      const newUser = await User.create(username, email, password);
+      req.session.userId = newUser.id;
+      req.session.username = newUser.username;
+
+      res.redirect('/dashboard');
+    } catch (err) {
+      console.error('Registration error:', err);
+      res.render('register', {
+        errors: [{ msg: 'Registration failed. Please try again.' }],
+        old: { username: req.body.username, email: req.body.email },
+      });
+    }
+  }
+);
+
+// Login page (GET)
+router.get('/login', isNotAuthenticated, (req, res) => {
+  res.render('login', { errors: [], old: {} });
+});
+
+// Login (POST)
+router.post(
+  '/login',
+  isNotAuthenticated,
+  [
+    body('email').trim().isEmail().withMessage('Invalid email address').normalizeEmail(),
+    body('password').notEmpty().withMessage('Password is required'),
+  ],
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.render('login', { errors: errors.array(), old: { email: req.body.email } });
+      }
+
+      const { email, password } = req.body;
+
+      // Find user by email
+      const user = await User.findByEmail(email);
+      if (!user) {
+        return res.render('login', {
+          errors: [{ msg: 'Invalid email or password' }],
+          old: { email },
+        });
+      }
+
+      // Verify password
+      const isPasswordValid = await User.verifyPassword(password, user.password);
+      if (!isPasswordValid) {
+        return res.render('login', {
+          errors: [{ msg: 'Invalid email or password' }],
+          old: { email },
+        });
+      }
+
+      // Set session
+      req.session.userId = user.id;
+      req.session.username = user.username;
+
+      const returnTo = req.session.returnTo || '/dashboard';
+      delete req.session.returnTo;
+      res.redirect(returnTo);
+    } catch (err) {
+      console.error('Login error:', err);
+      res.render('login', {
+        errors: [{ msg: 'Login failed. Please try again.' }],
+        old: { email: req.body.email },
+      });
+    }
+  }
+);
+
+// Logout
+router.get('/logout', isAuthenticated, (req, res) => {
+  req.session.destroy((err) => {
+    if (err) {
+      return res.render('404', { error: 'Logout failed' });
+    }
+    res.redirect('/');
+  });
+});
+
+module.exports = router;

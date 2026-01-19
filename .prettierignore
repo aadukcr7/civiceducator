@@ -1,0 +1,9 @@
+node_modules/
+*.db
+*.sqlite
+*.sqlite3
+coverage/
+logs/
+build/
+dist/
+Procfile

@@ -1,0 +1,57 @@
+<%- include('partials/header', { title: 'Register' }) %>
+
+<main class="flex-grow-1">
+  <div class="auth-container">
+    <div class="card auth-card">
+      <div class="card-body">
+        <h2 class="card-title text-center mb-4">Create Account</h2>
+
+        <% if (errors && errors.length > 0) { %>
+          <div class="alert alert-danger" role="alert">
+            <ul class="mb-0">
+              <% errors.forEach(error => { %>
+                <li><%= error.msg %></li>
+              <% }); %>
+            </ul>
+          </div>
+        <% } %>
+
+        <form method="POST" action="/auth/register">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <div class="mb-3">
+            <label for="username" class="form-label">Username</label>
+            <input type="text" class="form-control" id="username" name="username" 
+              placeholder="Enter username (3-20 characters)" value="<%= (old && old.username) ? old.username : '' %>" required>
+            <small class="form-text text-muted">Letters, numbers, and underscores only</small>
+          </div>
+
+          <div class="mb-3">
+            <label for="email" class="form-label">Email Address</label>
+            <input type="email" class="form-control" id="email" name="email" 
+              placeholder="Enter your email" value="<%= (old && old.email) ? old.email : '' %>" required>
+          </div>
+
+          <div class="mb-3">
+            <label for="password" class="form-label">Password</label>
+            <input type="password" class="form-control" id="password" name="password" 
+              placeholder="Enter a strong password (8+ chars, upper/lowercase, number, special char)" required>
+          </div>
+
+          <div class="mb-4">
+            <label for="confirmPassword" class="form-label">Confirm Password</label>
+            <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" 
+              placeholder="Confirm your password" required>
+          </div>
+
+          <button type="submit" class="btn btn-primary w-100 mb-3">Register</button>
+        </form>
+
+        <p class="text-center">
+          Already have an account? <a href="/auth/login">Login here</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</main>
+
+<%- include('partials/footer') %>

@@ -1,0 +1,57 @@
+<%- include('partials/header', { title: 'All Levels' }) %>
+
+<main class="flex-grow-1">
+  <div class="container py-5">
+    <h1 class="mb-4">All Learning Levels</h1>
+    
+    <div class="row g-4">
+      <% if (levels && levels.length > 0) { %>
+        <% levels.forEach(level => { %>
+          <div class="col-lg-4 col-md-6">
+            <div class="level-card <%= level.completed ? 'completed' : '' %>">
+              <div class="level-header">
+                <span class="level-icon"><%= level.icon %></span>
+                <% if (level.completed) { %>
+                  <span class="badge bg-success position-absolute top-0 end-0 m-2">✓ Completed</span>
+                <% } %>
+              </div>
+              
+              <h5><%= level.title %></h5>
+              <p class="level-description"><%= level.description %></p>
+              
+              <% if (level.lessons) { %>
+                <p class="text-muted mb-3">
+                  <small><strong><%= level.lessons.length %> lessons</strong> • <%= level.quiz ? level.quiz.length : 0 %> quiz questions</small>
+                </p>
+              <% } %>
+              
+              <% if (level.completed && level.score !== null) { %>
+                <div class="score-badge">
+                  <strong><%= level.score %>%</strong>
+                </div>
+              <% } %>
+              
+              <a href="/levels/<%= level.id %>" class="btn btn-primary w-100">
+                <% if (level.completed) { %>
+                  Review Level
+                <% } else { %>
+                  Start Learning
+                <% } %>
+              </a>
+            </div>
+          </div>
+        <% }); %>
+      <% } else { %>
+        <div class="col-12">
+          <div class="alert alert-info">No levels available.</div>
+        </div>
+      <% } %>
+    </div>
+
+    <div class="mt-5">
+      <a href="/dashboard" class="btn btn-outline-secondary">← Back to Dashboard</a>
+    </div>
+  </div>
+</main>
+
+<%- include('partials/footer') %>

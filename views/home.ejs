@@ -1,0 +1,131 @@
+<%- include('partials/header', { title: 'Home' }) %>
+
+<main class="flex-grow-1">
+  <!-- Hero Section -->
+  <div class="hero-section">
+    <div class="container py-5 text-center">
+      <h1 class="display-4 fw-bold mb-4">Welcome to Civic Education Nepal</h1>
+      <p class="lead mb-4">Learn civic consciousness, constitutional rights, and responsibilities aligned with Nepal's Constitution 2072</p>
+      <% if (!isAuthenticated) { %>
+        <a href="/auth/register" class="btn btn-primary btn-lg me-3">Get Started</a>
+        <a href="/auth/login" class="btn btn-outline-primary btn-lg">Login</a>
+      <% } else { %>
+        <a href="/dashboard" class="btn btn-primary btn-lg me-3">Go to Dashboard</a>
+        <a href="/levels" class="btn btn-outline-primary btn-lg">View All Levels</a>
+      <% } %>
+    </div>
+  </div>
+
+  <!-- Features Section -->
+  <section class="py-5 bg-light">
+    <div class="container">
+      <h2 class="text-center mb-5">Why Learn Civic Education?</h2>
+      <div class="row g-4">
+        <div class="col-md-4">
+          <div class="feature-card">
+            <div class="feature-icon"><i class="bi bi-book-half"></i></div>
+            <h5>Constitutional Knowledge</h5>
+            <p>Understand Nepal's Constitution 2072, fundamental rights, duties, and the federal structure of governance.</p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="feature-card">
+            <div class="feature-icon"><i class="bi bi-bank"></i></div>
+            <h5>Democratic Participation</h5>
+            <p>Learn how to actively participate in democracy, understand your rights, and fulfill your civic duties.</p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="feature-card">
+            <div class="feature-icon"><i class="bi bi-globe2"></i></div>
+            <h5>Social Awareness</h5>
+            <p>Develop awareness about environmental conservation, waste management, and cultural harmony in society.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Curriculum Section -->
+  <section class="py-5">
+    <div class="container">
+      <h2 class="text-center mb-5">Our Learning Path</h2>
+      <div class="row g-4">
+        <div class="col-lg-6">
+          <div class="curriculum-card">
+            <div class="curriculum-number">1</div>
+            <h5>Civic Consciousness & Constitution</h5>
+            <p>Explore Nepal's constitutional framework, 31 fundamental rights, and federal governance structure.</p>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="curriculum-card">
+            <div class="curriculum-number">2</div>
+            <h5>Public Cleanliness & Waste Management</h5>
+            <p>Learn about waste segregation, the 3R principle, and initiatives like Swachh Nepal campaign.</p>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="curriculum-card">
+            <div class="curriculum-number">3</div>
+            <h5>Traffic Rules & Road Safety</h5>
+            <p>Master Nepal's traffic regulations, safe driving practices, and emergency helpline numbers (102, 103).</p>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="curriculum-card">
+            <div class="curriculum-number">4</div>
+            <h5>Environmental Protection & Heritage</h5>
+            <p>Discover Nepal's biodiversity, national parks, and environmental protection laws.</p>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="curriculum-card">
+            <div class="curriculum-number">5</div>
+            <h5>Social Inclusion & Cultural Harmony</h5>
+            <p>Understand Nepal's diversity (123 languages, 125+ ethnic groups) and anti-discrimination laws.</p>
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <div class="curriculum-card">
+            <div class="curriculum-number">6</div>
+            <h5>Digital Citizenship & Information Literacy</h5>
+            <p>Navigate cyber laws, digital rights, e-governance, and protect yourself from misinformation.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How It Works -->
+  <section class="py-5 bg-light">
+    <div class="container">
+      <h2 class="text-center mb-5">How It Works</h2>
+      <div class="row text-center">
+        <div class="col-md-4">
+          <div class="step-card">
+            <div class="step-number">1</div>
+            <h5>Register</h5>
+            <p>Create a free account and start your learning journey.</p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="step-card">
+            <div class="step-number">2</div>
+            <h5>Learn</h5>
+            <p>Complete lessons in each level to build knowledge progressively.</p>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="step-card">
+            <div class="step-number">3</div>
+            <h5>Quiz & Progress</h5>
+            <p>Take quizzes (70% passing score) and track your progress on the dashboard.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<%- include('partials/footer') %>

@@ -1,0 +1,15 @@
+<%- include('partials/header', { title: 'Forbidden' }) %>
+
+<main class="flex-grow-1 d-flex align-items-center justify-content-center">
+  <div class="container">
+    <div class="text-center error-page">
+      <h1 class="display-4"><i class="bi bi-shield-lock-fill text-danger"></i> 403</h1>
+      <h2>Access Forbidden</h2>
+      <p class="lead mb-4">You don't have permission to access this page.</p>
+      <a href="/" class="btn btn-primary btn-lg"><i class="bi bi-house-door"></i> Go Home</a>
+      <a href="/auth/login" class="btn btn-outline-primary btn-lg ms-2"><i class="bi bi-box-arrow-in-right"></i> Login</a>
+    </div>
+  </div>
+</main>
+
+<%- include('partials/footer') %>

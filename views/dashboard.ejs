@@ -1,0 +1,123 @@
+<%- include('partials/header', { title: 'Dashboard' }) %>
+
+<main class="flex-grow-1">
+  <div class="container py-5">
+    <h1 class="mb-4">Welcome, <%= session.username %>!</h1>
+
+    <!-- Statistics Cards -->
+    <div class="row g-4 mb-5">
+      <div class="col-md-3">
+        <div class="stat-card">
+          <div class="stat-icon"><i class="bi bi-graph-up"></i></div>
+          <div class="stat-content">
+            <h6>Progress</h6>
+            <h3 id="progressPercent">0%</h3>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="stat-card">
+          <div class="stat-icon"><i class="bi bi-check2-circle"></i></div>
+          <div class="stat-content">
+            <h6>Completed</h6>
+            <h3 id="completedCount">0</h3>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="stat-card">
+          <div class="stat-icon"><i class="bi bi-bar-chart"></i></div>
+          <div class="stat-content">
+            <h6>Average Score</h6>
+            <h3 id="avgScore">--</h3>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="stat-card">
+          <div class="stat-icon"><i class="bi bi-bullseye"></i></div>
+          <div class="stat-content">
+            <h6>Total Levels</h6>
+            <h3 id="totalLevels">6</h3>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="mb-5">
+      <h4>Overall Progress</h4>
+      <div class="progress" style="height: 30px;">
+        <div id="progressBar" class="progress-bar" role="progressbar" style="width: 0%">
+          <span id="progressText">0%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Levels Grid -->
+    <h4 class="mb-4">Learning Levels</h4>
+    <div class="row g-4">
+      <div id="levelsContainer">
+        <div class="text-center">
+          <div class="spinner-border" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+  try {
+    const response = await fetch('/levels/data/dashboard');
+    const data = await response.json();
+
+    // Update stats
+    document.getElementById('progressPercent').textContent = data.stats.progressPercentage + '%';
+    document.getElementById('completedCount').textContent = data.stats.completedCount;
+    document.getElementById('avgScore').textContent = data.stats.avgScore > 0 ? data.stats.avgScore + '%' : '--';
+    document.getElementById('totalLevels').textContent = data.stats.totalLevels;
+
+    // Update progress bar
+    const progressPercent = data.stats.progressPercentage;
+    document.getElementById('progressBar').style.width = progressPercent + '%';
+    document.getElementById('progressText').textContent = progressPercent + '%';
+
+    // Render levels
+    const container = document.getElementById('levelsContainer');
+    container.innerHTML = '';
+
+    data.allLevels.forEach(level => {
+      const completedLevel = data.completedLevels.find(l => l.id === level.id);
+      const isCompleted = !!completedLevel;
+      
+      const levelCard = document.createElement('div');
+      levelCard.className = 'col-lg-4';
+      levelCard.innerHTML = `
+        <div class="level-card ${isCompleted ? 'completed' : ''}">
+          <div class="level-icon">${level.icon}</div>
+          <h5>${level.title}</h5>
+          <p>${level.description}</p>
+          ${isCompleted ? `
+            <div class="mb-3">
+              <span class="badge bg-success">✓ Completed</span>
+              <p class="mb-0"><small>Score: ${completedLevel.score}%</small></p>
+            </div>
+          ` : ''}
+          <a href="/levels/${level.id}" class="btn btn-primary btn-sm">
+            ${isCompleted ? 'Review' : 'Start Learning'}
+          </a>
+        </div>
+      `;
+      container.appendChild(levelCard);
+    });
+  } catch (error) {
+    console.error('Error loading dashboard:', error);
+    document.getElementById('levelsContainer').innerHTML = '<div class="alert alert-danger">Error loading dashboard data</div>';
+  }
+});
+</script>
+
+<%- include('partials/footer') %>

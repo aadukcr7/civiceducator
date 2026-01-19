@@ -1,0 +1,88 @@
+<%- include('partials/header', { title: 'Quiz Result' }) %>
+
+<main class="flex-grow-1">
+  <div class="container py-5">
+    <div class="result-container">
+      <div class="result-header <%= passed ? 'passed' : 'failed' %>">
+        <div class="result-icon">
+          <%= passed ? '🎉' : '📝' %>
+        </div>
+        <h1><%= passed ? 'Quiz Passed!' : 'Quiz Completed' %></h1>
+        <p class="result-message">
+          <% if (passed) { %>
+            Congratulations! You have successfully completed this level.
+          <% } else { %>
+            You need to score 70% to pass. Please review and try again.
+          <% } %>
+        </p>
+      </div>
+
+      <!-- Score Display -->
+      <div class="score-display">
+        <div class="score-main">
+          <h2><%= score %>%</h2>
+          <p>Your Score</p>
+        </div>
+        <div class="score-details">
+          <p><strong><%= correctCount %> of <%= totalQuestions %></strong> answers correct</p>
+          <p><strong>Passing Score:</strong> 70%</p>
+        </div>
+      </div>
+
+      <!-- Question Results -->
+      <div class="results-section">
+        <h3>Review Your Answers</h3>
+        
+        <% questionResults.forEach((result, index) => { %>
+          <div class="question-result <%= result.isCorrect ? 'correct' : 'incorrect' %>">
+            <div class="result-header-small">
+              <span class="result-status">
+                <% if (result.isCorrect) { %>
+                  <span class="badge bg-success">✓ Correct</span>
+                <% } else { %>
+                  <span class="badge bg-danger">✗ Incorrect</span>
+                <% } %>
+              </span>
+            </div>
+            <h5><%= index + 1 %>. <%= result.question %></h5>
+            
+            <div class="answer-review">
+              <% result.options.forEach((option, optIndex) => { %>
+                <div class="answer-option <%= 
+                  (optIndex === result.userAnswer && optIndex === result.correctAnswer) ? 'your-correct' :
+                  (optIndex === result.userAnswer && optIndex !== result.correctAnswer) ? 'your-wrong' :
+                  (optIndex === result.correctAnswer) ? 'correct-answer' : ''
+                %>">
+                  <strong><%= String.fromCharCode(65 + optIndex) %>.</strong> <%= option %>
+                  
+                  <% if (optIndex === result.userAnswer && optIndex === result.correctAnswer) { %>
+                    <span class="badge bg-success ms-2">Your Answer ✓</span>
+                  <% } else if (optIndex === result.userAnswer && optIndex !== result.correctAnswer) { %>
+                    <span class="badge bg-danger ms-2">Your Answer ✗</span>
+                  <% } else if (optIndex === result.correctAnswer) { %>
+                    <span class="badge bg-success ms-2">Correct Answer</span>
+                  <% } %>
+                </div>
+              <% }); %>
+            </div>
+          </div>
+        <% }); %>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="action-buttons">
+        <a href="/levels/<%= levelId %>" class="btn btn-primary btn-lg">
+          Review Lessons
+        </a>
+        <a href="/levels" class="btn btn-outline-primary btn-lg">
+          View All Levels
+        </a>
+        <a href="/dashboard" class="btn btn-outline-secondary btn-lg">
+          Back to Dashboard
+        </a>
+      </div>
+    </div>
+  </div>
+</main>
+
+<%- include('partials/footer') %>
