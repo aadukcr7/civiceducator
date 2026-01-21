@@ -108,6 +108,30 @@ const levels = [
         content:
           'Proper sanitation prevents infectious diseases and improves public health. Responsibility shared between government, institutions, and individuals.',
       },
+      {
+        id: 206,
+        title: 'Composting & Organic Waste',
+        content:
+          'Composting converts organic waste into nutrient-rich fertilizer for gardens and farms. Home composting reduces landfill burden and creates circular economy benefits.',
+      },
+      {
+        id: 207,
+        title: 'Plastic Pollution Crisis',
+        content:
+          'Single-use plastics harm environment and wildlife. Nepal banned plastic bags and microbeads. Alternatives: cloth bags, glass containers, biodegradable packaging.',
+      },
+      {
+        id: 208,
+        title: 'Water Conservation & Quality',
+        content:
+          'Access to clean water is fundamental right. Water pollution from industrial waste and sewage threatens health. Conservation through reduced usage and rainwater harvesting.',
+      },
+      {
+        id: 209,
+        title: 'Community Health & Hygiene',
+        content:
+          'Hand washing, food hygiene, and personal cleanliness prevent disease spread. Public awareness campaigns reduce communicable diseases. Schools lead sanitation initiatives.',
+      },
     ],
     quiz: [
       {
@@ -183,6 +207,30 @@ const levels = [
         content:
           'Ambulance: 102, Traffic Police: 103, Police: 100. Available 24/7 for emergencies. Report location and nature of incident for faster response.',
       },
+      {
+        id: 306,
+        title: 'Seat Belts & Helmets',
+        content:
+          'Mandatory seat belt use reduces injury risk by 50%. Helmets prevent 37% of motorcycle deaths. Front and rear seat belt compliance saves lives.',
+      },
+      {
+        id: 307,
+        title: 'Pedestrian & Cyclist Safety',
+        content:
+          'Use crossings, watch for traffic, avoid roads at night. Cyclists wear helmets and reflectors. Share roads responsibly with motorized vehicles.',
+      },
+      {
+        id: 308,
+        title: 'Drunk Driving & Substance Use',
+        content:
+          'Driving under influence increases accident risk 7-fold. Strict penalties in Nepal. Designated drivers and public transport save lives.',
+      },
+      {
+        id: 309,
+        title: 'Vehicle Maintenance & Inspection',
+        content:
+          'Regular servicing ensures brakes, lights, tires work safely. Annual vehicle inspection required in Nepal. Proper maintenance prevents accidents.',
+      },
     ],
     quiz: [
       {
@@ -253,6 +301,30 @@ const levels = [
         content:
           'Glacier melting threatens water sources and increases natural disasters. Community forestry programs and sustainable practices help mitigate climate impacts.',
       },
+      {
+        id: 406,
+        title: 'Air Quality & Pollution Control',
+        content:
+          'Vehicle emissions contribute to air pollution in Kathmandu Valley. Reducing use of fossil fuels and promoting electric vehicles improves air quality.',
+      },
+      {
+        id: 407,
+        title: 'Forest Conservation & Reforestation',
+        content:
+          'Forests provide oxygen, prevent erosion, and support biodiversity. Nepal must increase forest coverage to 45% through community plantations.',
+      },
+      {
+        id: 408,
+        title: 'Wildlife Protection & Conservation',
+        content:
+          'Nepal protects endangered species like Bengal tigers and Indian rhinoceros. Protected areas preserve ecosystems and promote wildlife tourism.',
+      },
+      {
+        id: 409,
+        title: 'Renewable Energy Sources',
+        content:
+          'Solar, wind, and hydroelectric power reduce carbon emissions. Nepal has potential to become renewable energy hub in South Asia region.',
+      },
     ],
     quiz: [
       {
@@ -317,6 +389,30 @@ const levels = [
         title: 'Festivals & Coexistence',
         content:
           'Dashain, Tihar, Holi, Eid, Christmas celebrated nationally. Interfaith marriages and shared spaces strengthen cohesion. Education emphasizes pluralism.',
+      },
+      {
+        id: 506,
+        title: 'Gender Equality & Women\'s Rights',
+        content:
+          'Constitution provides equal rights to women. Participation in politics, education, employment crucial. Gender-based violence requires community action.',
+      },
+      {
+        id: 507,
+        title: 'Rights of Marginalized Communities',
+        content:
+          'Dalits face historical discrimination despite legal protections. Reserved representation in government and education. Community awareness campaigns against caste discrimination essential.',
+      },
+      {
+        id: 508,
+        title: 'Indigenous Peoples\' Protection',
+        content:
+          'Indigenous groups have rights to traditional lands, culture, and self-governance. International Declaration on Indigenous Rights guides policies. Education preserves cultural heritage.',
+      },
+      {
+        id: 509,
+        title: 'Religious Freedom & Minority Rights',
+        content:
+          'Nepal recognizes all religions equally. Minorities protected from discrimination and violence. Inter-religious dialogue and respect for differences strengthens national harmony.',
       },
     ],
     quiz: [
@@ -392,6 +488,30 @@ const levels = [
         title: 'Digital Citizenship & Ethics',
         content:
           'Responsible online behavior: respect privacy, avoid harassment, no plagiarism. Cyberbullying causes serious harm. Digital security practices: strong passwords, 2FA, avoid suspicious links.',
+      },
+      {
+        id: 606,
+        title: 'Social Media Safety & Responsible Use',
+        content:
+          'Social media can spread misinformation quickly. Think before posting. Avoid oversharing personal information. Report inappropriate content and harassment. Balance screen time for health.',
+      },
+      {
+        id: 607,
+        title: 'Protecting Personal Information Online',
+        content:
+          'Never share passwords, ID numbers, bank details with strangers. Use strong unique passwords for different accounts. Enable two-factor authentication. Beware of phishing scams.',
+      },
+      {
+        id: 608,
+        title: 'Copyright & Intellectual Property',
+        content:
+          'Plagiarism means copying without credit. Respect authors\' work through proper citations. License and copyright protect original creators. Understand fair use and licensing.',
+      },
+      {
+        id: 609,
+        title: 'Online Harassment & Reporting',
+        content:
+          'Cyberbullying includes threats, insults, rumors online. Effects are serious: stress, anxiety, depression. Report harassment to platform and authorities. Support victims with kindness.',
       },
     ],
     quiz: [
