@@ -1,12 +1,7 @@
 const express = require('express');
 const { isAuthenticated } = require('../middleware/auth');
 const levels = require('../data/levels');
-let levelsExpanded = {};
-try {
-  levelsExpanded = require('../data/levelsExpanded');
-} catch (e) {
-  levelsExpanded = {};
-}
+const levelsExpanded = levels.expanded || {};
 const Progress = require('../models/Progress');
 const User = require('../models/User');
 
