@@ -2,30 +2,6 @@
 
 // Form validation
 document.addEventListener('DOMContentLoaded', () => {
-  // Theme toggle
-  const savedTheme = localStorage.getItem('theme');
-  if (savedTheme) {
-    document.documentElement.setAttribute('data-theme', savedTheme);
-  }
-  const themeToggle = document.getElementById('themeToggle');
-  if (themeToggle) {
-    const setIcon = () => {
-      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-      themeToggle.innerHTML = `<i class="bi ${isDark ? 'bi-sun' : 'bi-moon-stars'}"></i>`;
-      themeToggle.setAttribute(
-        'aria-label',
-        isDark ? 'Switch to light theme' : 'Switch to dark theme'
-      );
-    };
-    setIcon();
-    themeToggle.addEventListener('click', () => {
-      const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-      const next = isDark ? 'light' : 'dark';
-      document.documentElement.setAttribute('data-theme', next);
-      localStorage.setItem('theme', next);
-      setIcon();
-    });
-  }
   // Add smooth scrolling for lesson links
   const lessonLinks = document.querySelectorAll('.lesson-item');
   lessonLinks.forEach((link) => {
