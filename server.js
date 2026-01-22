@@ -17,8 +17,27 @@ const { isAuthenticated } = require('./middleware/auth');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Trust proxy (required for Render HTTPS)
+if (process.env.NODE_ENV === 'production') {
+  app.set('trust proxy', 1);
+}
+
 // Security middleware
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", 'data:', 'https:'],
+    },
+  },
+  hsts: {
+    maxAge: 31536000,
+    includeSubDomains: true,
+    preload: true,
+  },
+}));
 
 // Rate limiting: 100 requests per 15 minutes
 const limiter = rateLimit({
@@ -39,6 +58,9 @@ app.use(morgan(morganFormat));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
+// CSRF protection - configure for production
+const csrfProtection = csrf({ cookie: false });
+
 // Session configuration with SQLite store
 app.use(
   session({
@@ -49,14 +71,14 @@ app.use(
     cookie: {
       secure: process.env.NODE_ENV === 'production', // HTTPS only in production
       httpOnly: true,
-      sameSite: 'strict',
+      sameSite: 'lax', // Allow form submissions from same site
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
     },
   })
 );
 
 // CSRF protection (must come after session)
-app.use(csrf());
+app.use(csrf({ cookie: false }));
 
 // View engine setup
 app.set('view engine', 'ejs');
