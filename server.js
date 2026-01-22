@@ -27,16 +27,17 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      scriptSrc: ["'self'", "'unsafe-inline'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"],
+      fontSrc: ["'self'", "https://cdn.jsdelivr.net"],
       imgSrc: ["'self'", 'data:', 'https:'],
     },
   },
-  hsts: {
+  hsts: process.env.NODE_ENV === 'production' ? {
     maxAge: 31536000,
     includeSubDomains: true,
     preload: true,
-  },
+  } : false,
 }));
 
 // Rate limiting: 100 requests per 15 minutes
@@ -77,15 +78,15 @@ app.use(
   })
 );
 
-// CSRF protection (must come after session)
-app.use(csrf({ cookie: false }));
-
 // View engine setup
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
-// Static files
+// Static files - must come BEFORE CSRF protection
 app.use(express.static(path.join(__dirname, 'public')));
+
+// CSRF protection (must come after session and static files)
+app.use(csrf({ cookie: false }));
 
 // Make user data available to all views
 app.use((req, res, next) => {

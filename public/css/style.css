@@ -36,26 +36,26 @@ main {
 }
 
 /* Navbar */
-.navbar {
-  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+.navbar.navbar-dark {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%) !important;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
-.navbar .navbar-brand {
+.navbar.navbar-dark .navbar-brand {
   font-size: 1.5rem;
   color: white !important;
   font-weight: 600;
   letter-spacing: 1px;
 }
 
-.navbar .nav-link {
+.navbar.navbar-dark .nav-link {
   color: rgba(255, 255, 255, 0.85) !important;
   margin-left: 1rem;
   transition: all 0.3s ease;
   font-weight: 500;
 }
 
-.navbar .nav-link:hover {
+.navbar.navbar-dark .nav-link:hover {
   color: white !important;
   text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
 }
