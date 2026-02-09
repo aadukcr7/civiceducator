@@ -12,6 +12,7 @@ require('dotenv').config();
 const db = require('./config/database');
 const authRoutes = require('./routes/auth');
 const levelsRoutes = require('./routes/levels');
+const adminRoutes = require('./routes/admin');
 const { isAuthenticated } = require('./middleware/auth');
 
 const app = express();
@@ -93,6 +94,10 @@ app.use((req, res, next) => {
   res.locals.user = req.session.userId ? req.session : null;
   res.locals.isAuthenticated = !!req.session.userId;
   res.locals.session = req.session;
+  res.locals.isAdmin =
+    !!req.session?.email &&
+    !!process.env.ADMIN_EMAIL &&
+    req.session.email.toLowerCase() === process.env.ADMIN_EMAIL.toLowerCase();
   try {
     res.locals.csrfToken = req.csrfToken();
   } catch (e) {
@@ -103,6 +108,7 @@ app.use((req, res, next) => {
 
 // Routes
 app.use('/auth', authRoutes);
+app.use('/admin', adminRoutes);
 // Apply auth middleware within the levels route handler for data endpoints
 app.use('/levels', levelsRoutes);
 

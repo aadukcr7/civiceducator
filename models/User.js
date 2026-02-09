@@ -51,7 +51,7 @@ class User {
   // Find user by ID
   static async findById(id) {
     return new Promise((resolve, reject) => {
-      const sql = 'SELECT id, username, email, created_at FROM users WHERE id = ?';
+      const sql = 'SELECT id, username, email, is_disabled, created_at FROM users WHERE id = ?';
       db.get(sql, [id], (err, row) => {
         if (err) {
           return reject(err);
@@ -59,6 +59,69 @@ class User {
         resolve(row);
       });
     });
+  }
+
+  // List all users
+  static async listAll() {
+    return new Promise((resolve, reject) => {
+      const sql =
+        'SELECT id, username, email, is_disabled, created_at FROM users ORDER BY created_at DESC';
+      db.all(sql, [], (err, rows) => {
+        if (err) {
+          return reject(err);
+        }
+        resolve(rows || []);
+      });
+    });
+  }
+
+  // Count all users
+  static async countAll() {
+    return new Promise((resolve, reject) => {
+      const sql = 'SELECT COUNT(*) as count FROM users';
+      db.get(sql, [], (err, row) => {
+        if (err) {
+          return reject(err);
+        }
+        resolve(row ? row.count : 0);
+      });
+    });
+  }
+
+  // Disable or enable a user
+  static async setDisabled(userId, isDisabled) {
+    return new Promise((resolve, reject) => {
+      const sql = 'UPDATE users SET is_disabled = ? WHERE id = ?';
+      db.run(sql, [isDisabled ? 1 : 0, userId], function (err) {
+        if (err) {
+          return reject(err);
+        }
+        resolve({ id: userId, isDisabled: !!isDisabled, changes: this.changes });
+      });
+    });
+  }
+
+  // Update password
+  static async updatePassword(userId, plainPassword) {
+    return new Promise((resolve, reject) => {
+      bcrypt.hash(plainPassword, 10, (err, hashedPassword) => {
+        if (err) {
+          return reject(err);
+        }
+
+        const sql = 'UPDATE users SET password = ? WHERE id = ?';
+        db.run(sql, [hashedPassword, userId], function (updateErr) {
+          if (updateErr) {
+            return reject(updateErr);
+          }
+          resolve({ id: userId, changes: this.changes });
+        });
+      });
+    });
+  }
+
+  static generateTempPassword() {
+    return Math.random().toString(36).slice(-10) + 'A1!';
   }
 
   // Verify password

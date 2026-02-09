@@ -87,6 +87,7 @@ router.post(
       const newUser = await User.create(username, email, password);
       req.session.userId = newUser.id;
       req.session.username = newUser.username;
+      req.session.email = newUser.email;
 
       res.redirect('/dashboard');
     } catch (err) {
@@ -130,6 +131,13 @@ router.post(
         });
       }
 
+      if (user.is_disabled) {
+        return res.render('login', {
+          errors: [{ msg: 'This account is disabled. Contact support.' }],
+          old: { email },
+        });
+      }
+
       // Verify password
       const isPasswordValid = await User.verifyPassword(password, user.password);
       if (!isPasswordValid) {
@@ -142,6 +150,7 @@ router.post(
       // Set session
       req.session.userId = user.id;
       req.session.username = user.username;
+      req.session.email = user.email;
 
       const returnTo = req.session.returnTo || '/dashboard';
       delete req.session.returnTo;

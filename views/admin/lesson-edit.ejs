@@ -1,0 +1,47 @@
+<%- include('../partials/header', { title: lesson ? 'Edit Lesson' : 'New Lesson' }) %>
+
+<main class="flex-grow-1">
+  <div class="container py-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+      <h1 class="mb-0"><%= lesson ? 'Edit Lesson' : 'Create Lesson' %> - <%= level.title %></h1>
+      <a class="btn btn-outline-secondary" href="/admin/levels/<%= level.id %>/lessons">Back to Lessons</a>
+    </div>
+
+    <% if (errors && errors.length > 0) { %>
+      <div class="alert alert-danger" role="alert">
+        <ul class="mb-0">
+          <% errors.forEach(error => { %>
+            <li><%= error.msg %></li>
+          <% }); %>
+        </ul>
+      </div>
+    <% } %>
+
+    <form method="POST" action="<%= lesson ? '/admin/levels/' + level.id + '/lessons/' + lesson.id : '/admin/levels/' + level.id + '/lessons' %>">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <div class="mb-3">
+        <label class="form-label" for="title">Title</label>
+        <input class="form-control" id="title" name="title" value="<%= lesson ? lesson.title : '' %>" required>
+      </div>
+      <div class="mb-3">
+        <label class="form-label" for="content">Content</label>
+        <textarea class="form-control" id="content" name="content" rows="6" required><%= lesson ? lesson.content : '' %></textarea>
+      </div>
+      <div class="mb-3">
+        <label class="form-label" for="keyPoints">Key Points (one per line)</label>
+        <textarea class="form-control" id="keyPoints" name="keyPoints" rows="4"><%= lesson && lesson.keyPoints ? lesson.keyPoints.join('\n') : '' %></textarea>
+      </div>
+      <div class="mb-3">
+        <label class="form-label" for="articles">Articles (comma separated)</label>
+        <input class="form-control" id="articles" name="articles" value="<%= lesson && lesson.articles ? lesson.articles.join(', ') : '' %>">
+      </div>
+      <div class="mb-3">
+        <label class="form-label" for="helpline">Helpline</label>
+        <input class="form-control" id="helpline" name="helpline" value="<%= lesson ? (lesson.helpline || '') : '' %>">
+      </div>
+      <button class="btn btn-primary" type="submit"><%= lesson ? 'Save Changes' : 'Create Lesson' %></button>
+    </form>
+  </div>
+</main>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,47 @@
+<%- include('../partials/header', { title: level ? 'Edit Level' : 'New Level' }) %>
+
+<main class="flex-grow-1">
+  <div class="container py-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+      <h1 class="mb-0"><%= level ? 'Edit Level' : 'Create Level' %></h1>
+      <a class="btn btn-outline-secondary" href="/admin/levels">Back to Levels</a>
+    </div>
+
+    <% if (errors && errors.length > 0) { %>
+      <div class="alert alert-danger" role="alert">
+        <ul class="mb-0">
+          <% errors.forEach(error => { %>
+            <li><%= error.msg %></li>
+          <% }); %>
+        </ul>
+      </div>
+    <% } %>
+
+    <form method="POST" action="<%= level ? '/admin/levels/' + level.id : '/admin/levels' %>">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <div class="mb-3">
+        <label class="form-label" for="title">Title</label>
+        <input class="form-control" id="title" name="title" value="<%= level ? level.title : '' %>" required>
+      </div>
+      <div class="mb-3">
+        <label class="form-label" for="description">Description</label>
+        <textarea class="form-control" id="description" name="description" rows="3" required><%= level ? level.description : '' %></textarea>
+      </div>
+      <div class="mb-3">
+        <label class="form-label" for="icon">Icon (emoji or text)</label>
+        <input class="form-control" id="icon" name="icon" value="<%= level ? level.icon : '' %>" required>
+      </div>
+      <button class="btn btn-primary" type="submit"><%= level ? 'Save Changes' : 'Create Level' %></button>
+    </form>
+
+    <% if (level) { %>
+      <hr class="my-4">
+      <div class="d-flex flex-wrap gap-2">
+        <a class="btn btn-outline-primary" href="/admin/levels/<%= level.id %>/lessons">Manage Lessons</a>
+        <a class="btn btn-outline-primary" href="/admin/levels/<%= level.id %>/quiz">Manage Quiz</a>
+      </div>
+    <% } %>
+  </div>
+</main>
+
+<%- include('../partials/footer') %>

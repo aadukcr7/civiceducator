@@ -1,0 +1,39 @@
+<%- include('../partials/header', { title: question ? 'Edit Quiz Question' : 'New Quiz Question' }) %>
+
+<main class="flex-grow-1">
+  <div class="container py-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+      <h1 class="mb-0"><%= question ? 'Edit Quiz Question' : 'Create Quiz Question' %> - <%= level.title %></h1>
+      <a class="btn btn-outline-secondary" href="/admin/levels/<%= level.id %>/quiz">Back to Quiz</a>
+    </div>
+
+    <% if (errors && errors.length > 0) { %>
+      <div class="alert alert-danger" role="alert">
+        <ul class="mb-0">
+          <% errors.forEach(error => { %>
+            <li><%= error.msg %></li>
+          <% }); %>
+        </ul>
+      </div>
+    <% } %>
+
+    <form method="POST" action="<%= question ? '/admin/levels/' + level.id + '/quiz/' + question.id : '/admin/levels/' + level.id + '/quiz' %>">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <div class="mb-3">
+        <label class="form-label" for="question">Question</label>
+        <textarea class="form-control" id="question" name="question" rows="3" required><%= question ? question.question : '' %></textarea>
+      </div>
+      <div class="mb-3">
+        <label class="form-label" for="options">Options (one per line)</label>
+        <textarea class="form-control" id="options" name="options" rows="5" required><%= question && question.options ? question.options.join('\n') : '' %></textarea>
+      </div>
+      <div class="mb-3">
+        <label class="form-label" for="correct">Correct Index (0-based)</label>
+        <input class="form-control" id="correct" name="correct" type="number" min="0" value="<%= question ? question.correct : '' %>" required>
+      </div>
+      <button class="btn btn-primary" type="submit"><%= question ? 'Save Changes' : 'Create Question' %></button>
+    </form>
+  </div>
+</main>
+
+<%- include('../partials/footer') %>

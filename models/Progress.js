@@ -84,6 +84,29 @@ class Progress {
     });
   }
 
+  // Global completion statistics
+  static async getGlobalStats() {
+    return new Promise((resolve, reject) => {
+      const sql = `
+        SELECT 
+          COUNT(CASE WHEN completed = 1 THEN 1 END) as completed_count,
+          AVG(CASE WHEN completed = 1 THEN score END) as avg_score
+        FROM progress
+      `;
+
+      db.get(sql, [], (err, row) => {
+        if (err) {
+          return reject(err);
+        }
+
+        resolve({
+          completedCount: row?.completed_count || 0,
+          averageScore: row?.avg_score ? Math.round(row.avg_score) : 0,
+        });
+      });
+    });
+  }
+
   // Check if level is completed
   static async isLevelCompleted(userId, levelId) {
     return new Promise((resolve, reject) => {

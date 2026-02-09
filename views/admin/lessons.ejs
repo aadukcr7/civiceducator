@@ -1,0 +1,50 @@
+<%- include('../partials/header', { title: 'Manage Lessons' }) %>
+
+<main class="flex-grow-1">
+  <div class="container py-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+      <h1 class="mb-0">Lessons: <%= level.title %></h1>
+      <div class="btn-group">
+        <a class="btn btn-outline-secondary" href="/admin/levels">Back to Levels</a>
+        <a class="btn btn-primary" href="/admin/levels/<%= level.id %>/lessons/new">Add Lesson</a>
+      </div>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-striped align-middle">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Title</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if (level.lessons && level.lessons.length > 0) { %>
+            <% level.lessons.forEach(lesson => { %>
+              <tr>
+                <td><%= lesson.id %></td>
+                <td><%= lesson.title %></td>
+                <td>
+                  <div class="d-flex flex-wrap gap-2">
+                    <a class="btn btn-sm btn-outline-primary" href="/admin/levels/<%= level.id %>/lessons/<%= lesson.id %>/edit">Edit</a>
+                    <form method="POST" action="/admin/levels/<%= level.id %>/lessons/<%= lesson.id %>/delete" onsubmit="return confirm('Delete this lesson?');">
+                      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                      <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            <% }); %>
+          <% } else { %>
+            <tr>
+              <td colspan="3">No lessons yet.</td>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<%- include('../partials/footer') %>

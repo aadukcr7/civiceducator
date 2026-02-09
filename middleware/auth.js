@@ -15,7 +15,22 @@ function isNotAuthenticated(req, res, next) {
   next();
 }
 
+function isAdmin(req, res, next) {
+  const adminEmail = process.env.ADMIN_EMAIL;
+  if (!adminEmail) {
+    return res.status(403).render('403');
+  }
+
+  const sessionEmail = req.session?.email;
+  if (sessionEmail && sessionEmail.toLowerCase() === adminEmail.toLowerCase()) {
+    return next();
+  }
+
+  return res.status(403).render('403');
+}
+
 module.exports = {
   isAuthenticated,
   isNotAuthenticated,
+  isAdmin,
 };

@@ -22,6 +22,7 @@ db.serialize(() => {
       username TEXT UNIQUE NOT NULL,
       email TEXT UNIQUE NOT NULL,
       password TEXT NOT NULL,
+      is_disabled INTEGER DEFAULT 0,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `,
@@ -33,6 +34,24 @@ db.serialize(() => {
       }
     }
   );
+
+  db.all('PRAGMA table_info(users)', (err, columns) => {
+    if (err) {
+      console.error('Error checking users table schema:', err.message);
+      return;
+    }
+
+    const hasDisabled = columns.some((col) => col.name === 'is_disabled');
+    if (!hasDisabled) {
+      db.run('ALTER TABLE users ADD COLUMN is_disabled INTEGER DEFAULT 0', (alterErr) => {
+        if (alterErr) {
+          console.error('Error adding is_disabled column:', alterErr.message);
+        } else {
+          console.log('Added is_disabled column to users table');
+        }
+      });
+    }
+  });
 
   // Progress table
   db.run(
