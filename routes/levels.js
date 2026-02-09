@@ -1,7 +1,6 @@
 const express = require('express');
 const { isAuthenticated } = require('../middleware/auth');
-const levels = require('../data/levels');
-const levelsExpanded = levels.expanded || {};
+const levelsStore = require('../data/levelsStore');
 const Progress = require('../models/Progress');
 const User = require('../models/User');
 
@@ -15,6 +14,7 @@ router.get('/', async (req, res) => {
   try {
     const userId = req.session.userId;
     const userProgress = await Progress.getAllProgress(userId);
+    const levels = await levelsStore.getLevels();
 
     // Create a map of completed levels for quick lookup
     const completedMap = {};
@@ -43,6 +43,7 @@ router.get('/', async (req, res) => {
 router.get('/data/dashboard', async (req, res) => {
   try {
     const userId = req.session.userId;
+    const levels = await levelsStore.getLevels();
 
     // Get user info
     const user = await User.findById(userId);
@@ -87,13 +88,11 @@ router.get('/:levelId', async (req, res) => {
     const levelId = parseInt(req.params.levelId);
     const userId = req.session.userId;
 
+    const levels = await levelsStore.getLevels();
     const level = levels.find((l) => l.id === levelId);
     if (!level) {
       return res.status(404).render('404', { error: 'Level not found' });
     }
-
-    // Prefer expanded lessons if available, else fallback
-    const expandedLessons = levelsExpanded[levelId];
 
     // Get user's progress for this level
     const progress = await Progress.getProgress(userId, levelId);
@@ -101,7 +100,7 @@ router.get('/:levelId', async (req, res) => {
     res.render('level', {
       level: level,
       progress: progress || { completed: false, score: null },
-      lessons: expandedLessons || level.lessons || [],
+      lessons: level.lessons || [],
     });
   } catch (err) {
     console.error('Error fetching level:', err);
@@ -116,6 +115,7 @@ router.post('/:levelId/quiz', async (req, res) => {
     const userId = req.session.userId;
     const answers = req.body.answers;
 
+    const levels = await levelsStore.getLevels();
     const level = levels.find((l) => l.id === levelId);
     if (!level || !level.quiz) {
       return res.status(404).render('404', { error: 'Level or quiz not found' });
