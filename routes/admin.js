@@ -1,43 +1,23 @@
 const express = require('express');
 const { body, validationResult } = require('express-validator');
 const { isAuthenticated, isAdmin } = require('../middleware/auth');
-const levelsStore = require('../data/levelsStore');
+const adminLevelsService = require('../services/adminLevelsService');
 const User = require('../models/User');
 const Progress = require('../models/Progress');
 
 const router = express.Router();
-
-const parseLines = (value) =>
-  value
-    .split('\n')
-    .map((line) => line.trim())
-    .filter(Boolean);
-
-const parseCommaList = (value) =>
-  value
-    .split(',')
-    .map((item) => item.trim())
-    .filter(Boolean);
-
-const getLevelStats = (levels) => {
-  const totalLevels = levels.length;
-  const totalLessons = levels.reduce((sum, level) => sum + (level.lessons || []).length, 0);
-  const totalQuestions = levels.reduce((sum, level) => sum + (level.quiz || []).length, 0);
-
-  return { totalLevels, totalLessons, totalQuestions };
-};
 
 router.use(isAuthenticated, isAdmin);
 
 router.get('/', async (req, res) => {
   try {
     const [levels, userCount, progressStats] = await Promise.all([
-      levelsStore.getLevels(),
+      adminLevelsService.getLevels(),
       User.countAll(),
       Progress.getGlobalStats(),
     ]);
 
-    const levelStats = getLevelStats(levels);
+    const levelStats = adminLevelsService.getLevelStats(levels);
 
     res.render('admin/index', {
       stats: {
@@ -99,7 +79,7 @@ router.post('/users/:id/reset-password', async (req, res) => {
 
 router.get('/levels', async (req, res) => {
   try {
-    const levels = await levelsStore.getLevels();
+    const levels = await adminLevelsService.getLevels();
     res.render('admin/levels', { levels });
   } catch (err) {
     console.error('Admin levels error:', err);
@@ -132,11 +112,7 @@ router.post(
     }
 
     try {
-      await levelsStore.createLevel({
-        title: req.body.title.trim(),
-        description: req.body.description.trim(),
-        icon: req.body.icon.trim(),
-      });
+      await adminLevelsService.createLevel(req.body);
 
       res.redirect('/admin/levels');
     } catch (err) {
@@ -148,7 +124,7 @@ router.post(
 
 router.get('/levels/:levelId/edit', async (req, res) => {
   try {
-    const level = await levelsStore.getLevel(req.params.levelId);
+    const level = await adminLevelsService.getLevel(req.params.levelId);
     if (!level) {
       return res.status(404).render('404', { error: 'Level not found' });
     }
@@ -183,11 +159,7 @@ router.post(
     }
 
     try {
-      const updated = await levelsStore.updateLevel(req.params.levelId, {
-        title: req.body.title.trim(),
-        description: req.body.description.trim(),
-        icon: req.body.icon.trim(),
-      });
+      const updated = await adminLevelsService.updateLevel(req.params.levelId, req.body);
 
       if (!updated) {
         return res.status(404).render('404', { error: 'Level not found' });
@@ -203,7 +175,7 @@ router.post(
 
 router.post('/levels/:levelId/delete', async (req, res) => {
   try {
-    const removed = await levelsStore.deleteLevel(req.params.levelId);
+    const removed = await adminLevelsService.deleteLevel(req.params.levelId);
     if (!removed) {
       return res.status(404).render('404', { error: 'Level not found' });
     }
@@ -216,7 +188,7 @@ router.post('/levels/:levelId/delete', async (req, res) => {
 
 router.get('/levels/:levelId/lessons', async (req, res) => {
   try {
-    const level = await levelsStore.getLevel(req.params.levelId);
+    const level = await adminLevelsService.getLevel(req.params.levelId);
     if (!level) {
       return res.status(404).render('404', { error: 'Level not found' });
     }
@@ -228,7 +200,7 @@ router.get('/levels/:levelId/lessons', async (req, res) => {
 });
 
 router.get('/levels/:levelId/lessons/new', async (req, res) => {
-  const level = await levelsStore.getLevel(req.params.levelId);
+  const level = await adminLevelsService.getLevel(req.params.levelId);
   if (!level) {
     return res.status(404).render('404', { error: 'Level not found' });
   }
@@ -242,7 +214,7 @@ router.post(
     body('content').trim().notEmpty().withMessage('Content is required'),
   ],
   async (req, res) => {
-    const level = await levelsStore.getLevel(req.params.levelId);
+    const level = await adminLevelsService.getLevel(req.params.levelId);
     if (!level) {
       return res.status(404).render('404', { error: 'Level not found' });
     }
@@ -263,13 +235,7 @@ router.post(
     }
 
     try {
-      await levelsStore.createLesson(req.params.levelId, {
-        title: req.body.title.trim(),
-        content: req.body.content.trim(),
-        keyPoints: parseLines(req.body.keyPoints || ''),
-        articles: parseCommaList(req.body.articles || ''),
-        helpline: req.body.helpline ? req.body.helpline.trim() : null,
-      });
+      await adminLevelsService.createLesson(req.params.levelId, req.body);
 
       res.redirect(`/admin/levels/${req.params.levelId}/lessons`);
     } catch (err) {
@@ -281,7 +247,7 @@ router.post(
 
 router.get('/levels/:levelId/lessons/:lessonId/edit', async (req, res) => {
   try {
-    const level = await levelsStore.getLevel(req.params.levelId);
+    const level = await adminLevelsService.getLevel(req.params.levelId);
     if (!level) {
       return res.status(404).render('404', { error: 'Level not found' });
     }
@@ -330,13 +296,11 @@ router.post(
     }
 
     try {
-      const updated = await levelsStore.updateLesson(req.params.levelId, req.params.lessonId, {
-        title: req.body.title.trim(),
-        content: req.body.content.trim(),
-        keyPoints: parseLines(req.body.keyPoints || ''),
-        articles: parseCommaList(req.body.articles || ''),
-        helpline: req.body.helpline ? req.body.helpline.trim() : null,
-      });
+      const updated = await adminLevelsService.updateLesson(
+        req.params.levelId,
+        req.params.lessonId,
+        req.body
+      );
 
       if (!updated) {
         return res.status(404).render('404', { error: 'Lesson not found' });
@@ -352,7 +316,7 @@ router.post(
 
 router.post('/levels/:levelId/lessons/:lessonId/delete', async (req, res) => {
   try {
-    const removed = await levelsStore.deleteLesson(req.params.levelId, req.params.lessonId);
+    const removed = await adminLevelsService.deleteLesson(req.params.levelId, req.params.lessonId);
     if (!removed) {
       return res.status(404).render('404', { error: 'Lesson not found' });
     }
@@ -365,7 +329,7 @@ router.post('/levels/:levelId/lessons/:lessonId/delete', async (req, res) => {
 
 router.get('/levels/:levelId/quiz', async (req, res) => {
   try {
-    const level = await levelsStore.getLevel(req.params.levelId);
+    const level = await adminLevelsService.getLevel(req.params.levelId);
     if (!level) {
       return res.status(404).render('404', { error: 'Level not found' });
     }
@@ -377,7 +341,7 @@ router.get('/levels/:levelId/quiz', async (req, res) => {
 });
 
 router.get('/levels/:levelId/quiz/new', async (req, res) => {
-  const level = await levelsStore.getLevel(req.params.levelId);
+  const level = await adminLevelsService.getLevel(req.params.levelId);
   if (!level) {
     return res.status(404).render('404', { error: 'Level not found' });
   }
@@ -392,7 +356,7 @@ router.post(
     body('correct').trim().notEmpty().withMessage('Correct index is required'),
   ],
   async (req, res) => {
-    const level = await levelsStore.getLevel(req.params.levelId);
+    const level = await adminLevelsService.getLevel(req.params.levelId);
     if (!level) {
       return res.status(404).render('404', { error: 'Level not found' });
     }
@@ -411,14 +375,7 @@ router.post(
     }
 
     try {
-      const options = parseLines(req.body.options || '');
-      const correctIndex = Number(req.body.correct);
-
-      await levelsStore.createQuizQuestion(req.params.levelId, {
-        question: req.body.question.trim(),
-        options,
-        correct: correctIndex,
-      });
+      await adminLevelsService.createQuizQuestion(req.params.levelId, req.body);
 
       res.redirect(`/admin/levels/${req.params.levelId}/quiz`);
     } catch (err) {
@@ -430,7 +387,7 @@ router.post(
 
 router.get('/levels/:levelId/quiz/:questionId/edit', async (req, res) => {
   try {
-    const level = await levelsStore.getLevel(req.params.levelId);
+    const level = await adminLevelsService.getLevel(req.params.levelId);
     if (!level) {
       return res.status(404).render('404', { error: 'Level not found' });
     }
@@ -478,17 +435,10 @@ router.post(
     }
 
     try {
-      const options = parseLines(req.body.options || '');
-      const correctIndex = Number(req.body.correct);
-
-      const updated = await levelsStore.updateQuizQuestion(
+      const updated = await adminLevelsService.updateQuizQuestion(
         req.params.levelId,
         req.params.questionId,
-        {
-          question: req.body.question.trim(),
-          options,
-          correct: correctIndex,
-        }
+        req.body
       );
 
       if (!updated) {
@@ -505,7 +455,7 @@ router.post(
 
 router.post('/levels/:levelId/quiz/:questionId/delete', async (req, res) => {
   try {
-    const removed = await levelsStore.deleteQuizQuestion(
+    const removed = await adminLevelsService.deleteQuizQuestion(
       req.params.levelId,
       req.params.questionId
     );
