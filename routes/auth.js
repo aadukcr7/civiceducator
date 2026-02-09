@@ -5,6 +5,21 @@ const { isAuthenticated, isNotAuthenticated } = require('../middleware/auth');
 
 const router = express.Router();
 
+const emailValidation = body('email')
+  .trim()
+  .isLength({ min: 6, max: 254 })
+  .withMessage('Email must be between 6 and 254 characters')
+  .isEmail({
+    allow_utf8_local_part: false,
+    allow_ip_domain: false,
+    require_tld: true,
+  })
+  .withMessage('Invalid email address')
+  .normalizeEmail({
+    gmail_remove_dots: false,
+    gmail_remove_subaddress: false,
+  });
+
 // Register page (GET)
 router.get('/register', isNotAuthenticated, (req, res) => {
   res.render('register', { errors: [], old: {} });
@@ -21,7 +36,7 @@ router.post(
       .withMessage('Username must be 3-20 characters')
       .matches(/^[a-zA-Z0-9_]+$/)
       .withMessage('Username can only contain letters, numbers, and underscores'),
-    body('email').trim().isEmail().withMessage('Invalid email address').normalizeEmail(),
+    emailValidation,
     body('password')
       .isLength({ min: 8 })
       .withMessage('Password must be at least 8 characters')
@@ -94,7 +109,7 @@ router.post(
   '/login',
   isNotAuthenticated,
   [
-    body('email').trim().isEmail().withMessage('Invalid email address').normalizeEmail(),
+    emailValidation,
     body('password').notEmpty().withMessage('Password is required'),
   ],
   async (req, res) => {
