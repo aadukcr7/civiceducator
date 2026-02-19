@@ -132,6 +132,95 @@ class Progress {
       });
     });
   }
+
+  // Save individual quiz attempt metrics
+  static async saveQuizAttempt({
+    userId,
+    levelId,
+    score,
+    correctCount,
+    totalQuestions,
+    durationSeconds,
+    difficulty,
+  }) {
+    return new Promise((resolve, reject) => {
+      const sql = `
+        INSERT INTO quiz_attempts (
+          user_id, level_id, score, correct_count, total_questions, duration_seconds, difficulty
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `;
+
+      db.run(
+        sql,
+        [
+          userId,
+          levelId,
+          score,
+          correctCount,
+          totalQuestions,
+          durationSeconds,
+          difficulty || 'medium',
+        ],
+        function (err) {
+          if (err) {
+            return reject(err);
+          }
+
+          resolve({
+            id: this.lastID,
+            userId,
+            levelId,
+            score,
+            correctCount,
+            totalQuestions,
+            durationSeconds,
+            difficulty: difficulty || 'medium',
+          });
+        }
+      );
+    });
+  }
+
+  // Get recent quiz attempts across all levels
+  static async getRecentQuizAttempts(userId, limit = 50) {
+    return new Promise((resolve, reject) => {
+      const sql = `
+        SELECT *
+        FROM quiz_attempts
+        WHERE user_id = ?
+        ORDER BY created_at DESC, id DESC
+        LIMIT ?
+      `;
+
+      db.all(sql, [userId, limit], (err, rows) => {
+        if (err) {
+          return reject(err);
+        }
+        resolve(rows || []);
+      });
+    });
+  }
+
+  // Get recent attempts for a specific level
+  static async getRecentQuizAttemptsForLevel(userId, levelId, limit = 3) {
+    return new Promise((resolve, reject) => {
+      const sql = `
+        SELECT *
+        FROM quiz_attempts
+        WHERE user_id = ? AND level_id = ?
+        ORDER BY created_at DESC, id DESC
+        LIMIT ?
+      `;
+
+      db.all(sql, [userId, levelId, limit], (err, rows) => {
+        if (err) {
+          return reject(err);
+        }
+        resolve(rows || []);
+      });
+    });
+  }
 }
 
 module.exports = Progress;

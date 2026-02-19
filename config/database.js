@@ -76,6 +76,49 @@ db.serialize(() => {
     }
   );
 
+  // Quiz attempts table for adaptive learning and analytics
+  db.run(
+    `
+    CREATE TABLE IF NOT EXISTS quiz_attempts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      level_id INTEGER NOT NULL,
+      score INTEGER NOT NULL,
+      correct_count INTEGER NOT NULL,
+      total_questions INTEGER NOT NULL,
+      duration_seconds INTEGER NOT NULL,
+      difficulty TEXT NOT NULL DEFAULT 'medium',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+  `,
+    (err) => {
+      if (err) {
+        console.error('Error creating quiz_attempts table:', err.message);
+      } else {
+        console.log('Quiz attempts table ready');
+      }
+    }
+  );
+
+  db.run(
+    'CREATE INDEX IF NOT EXISTS idx_quiz_attempts_user_level_created ON quiz_attempts(user_id, level_id, created_at DESC)',
+    (err) => {
+      if (err) {
+        console.error('Error creating quiz_attempts user-level index:', err.message);
+      }
+    }
+  );
+
+  db.run(
+    'CREATE INDEX IF NOT EXISTS idx_quiz_attempts_user_created ON quiz_attempts(user_id, created_at DESC)',
+    (err) => {
+      if (err) {
+        console.error('Error creating quiz_attempts user index:', err.message);
+      }
+    }
+  );
+
   // Sessions table (used by connect-sqlite3)
   db.run(
     `
