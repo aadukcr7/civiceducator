@@ -40,16 +40,13 @@ SESSION_SECRET=change_me
 DATABASE_PATH=./civic_education.db
 PASSING_SCORE=70
 MAX_CONCURRENT_USERS=100
-ADAPTIVE_QUIZ_QUESTION_COUNT=6
+ADAPTIVE_QUIZ_QUESTION_COUNT=12
 ```
 
 4. Run the app
 
 ```bash
-npm start     # production mode
-npm run dev   # development (nodemon)
-```
-
+npm start    
 Visit: http://localhost:5000
 
 ## Project Structure
