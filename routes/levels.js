@@ -5,6 +5,57 @@ const Progress = require('../models/Progress');
 const User = require('../models/User');
 
 const router = express.Router();
+const QUIZ_LEAD_SIZE = 3;
+const QUIZ_MAX_GENERATION_ATTEMPTS = 10;
+const QUIZ_RECENT_LEADS_LIMIT = 5;
+
+function shuffleArray(items) {
+  const arr = [...items];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function getLeadSignature(questions) {
+  return questions
+    .slice(0, Math.min(QUIZ_LEAD_SIZE, questions.length))
+    .map((question) => question.id)
+    .join(',');
+}
+
+function buildQuizForAttempt(req, levelId, baseQuiz) {
+  if (!Array.isArray(baseQuiz) || baseQuiz.length <= 1) {
+    return Array.isArray(baseQuiz) ? [...baseQuiz] : [];
+  }
+
+  const levelKey = String(levelId);
+  const recentLeadsByLevel = req.session.quizRecentLeads || {};
+  const lastOrderByLevel = req.session.quizLastOrder || {};
+  const recentLeads = Array.isArray(recentLeadsByLevel[levelKey])
+    ? recentLeadsByLevel[levelKey]
+    : [];
+  const previousOrder = Array.isArray(lastOrderByLevel[levelKey]) ? lastOrderByLevel[levelKey] : [];
+  const previousOrderSignature = previousOrder.join(',');
+
+  let candidate = shuffleArray(baseQuiz);
+
+  for (let attempt = 0; attempt < QUIZ_MAX_GENERATION_ATTEMPTS; attempt++) {
+    const leadSignature = getLeadSignature(candidate);
+    const candidateOrderSignature = candidate.map((q) => q.id).join(',');
+    const repeatsLead = recentLeads.includes(leadSignature);
+    const repeatsFullOrder = previousOrderSignature && candidateOrderSignature === previousOrderSignature;
+
+    if (!repeatsLead && !repeatsFullOrder) {
+      break;
+    }
+
+    candidate = shuffleArray(baseQuiz);
+  }
+
+  return candidate;
+}
 
 // Apply authentication middleware to all routes in this router
 router.use(isAuthenticated);
@@ -96,9 +147,19 @@ router.get('/:levelId', async (req, res) => {
 
     // Get user's progress for this level
     const progress = await Progress.getProgress(userId, levelId);
+    const randomizedQuiz = buildQuizForAttempt(req, levelId, level.quiz || []);
+    const levelKey = String(levelId);
+
+    if (!req.session.quizAttemptOrder) {
+      req.session.quizAttemptOrder = {};
+    }
+    req.session.quizAttemptOrder[levelKey] = randomizedQuiz.map((question) => question.id);
 
     res.render('level', {
-      level: level,
+      level: {
+        ...level,
+        quiz: randomizedQuiz,
+      },
       progress: progress || { completed: false, score: null },
       lessons: level.lessons || [],
     });
@@ -114,6 +175,7 @@ router.post('/:levelId/quiz', async (req, res) => {
     const levelId = parseInt(req.params.levelId);
     const userId = req.session.userId;
     const answers = req.body.answers;
+    const levelKey = String(levelId);
 
     const levels = await levelsStore.getLevels();
     const level = levels.find((l) => l.id === levelId);
@@ -144,6 +206,25 @@ router.post('/:levelId/quiz', async (req, res) => {
 
     // Save progress
     await Progress.saveProgress(userId, levelId, score, passed);
+
+    const attemptOrderByLevel = req.session.quizAttemptOrder || {};
+    const lastOrderByLevel = req.session.quizLastOrder || {};
+    const recentLeadsByLevel = req.session.quizRecentLeads || {};
+    const attemptOrder = Array.isArray(attemptOrderByLevel[levelKey])
+      ? attemptOrderByLevel[levelKey]
+      : level.quiz.map((question) => question.id);
+    const leadSignature = attemptOrder.slice(0, Math.min(QUIZ_LEAD_SIZE, attemptOrder.length)).join(',');
+
+    lastOrderByLevel[levelKey] = attemptOrder;
+    recentLeadsByLevel[levelKey] = [
+      ...(Array.isArray(recentLeadsByLevel[levelKey]) ? recentLeadsByLevel[levelKey] : []),
+      leadSignature,
+    ].slice(-QUIZ_RECENT_LEADS_LIMIT);
+
+    req.session.quizLastOrder = lastOrderByLevel;
+    req.session.quizRecentLeads = recentLeadsByLevel;
+    req.session.quizAttemptOrder = attemptOrderByLevel;
+    delete req.session.quizAttemptOrder[levelKey];
 
     res.render('result', {
       levelId: levelId,
