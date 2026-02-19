@@ -59,6 +59,11 @@
         <div class="quiz-section">
           <h3>Take the Quiz</h3>
           <p class="text-muted">Answer all questions. You need 70% to pass.</p>
+          <% if (adaptiveDifficulty) { %>
+            <p class="text-muted mb-3">
+              <strong>Adaptive Mode:</strong> Your next quiz difficulty is set to <%= adaptiveDifficulty %> based on recent performance and completion speed.
+            </p>
+          <% } %>
           
           <form method="POST" action="/levels/<%= level.id %>/quiz" id="quizForm">
             <input type="hidden" name="_csrf" value="<%= csrfToken %>">

@@ -8,6 +8,11 @@ const router = express.Router();
 const QUIZ_LEAD_SIZE = 3;
 const QUIZ_MAX_GENERATION_ATTEMPTS = 10;
 const QUIZ_RECENT_LEADS_LIMIT = 5;
+const QUIZ_RECENT_ATTEMPTS_FOR_ADAPTIVE = 3;
+const DEFAULT_ADAPTIVE_QUIZ_COUNT = 6;
+const MIN_ADAPTIVE_QUIZ_COUNT = 5;
+const FAST_SECONDS_PER_QUESTION = 22;
+const SLOW_SECONDS_PER_QUESTION = 40;
 
 function shuffleArray(items) {
   const arr = [...items];
@@ -25,7 +30,281 @@ function getLeadSignature(questions) {
     .join(',');
 }
 
-function buildQuizForAttempt(req, levelId, baseQuiz) {
+function normalizeDifficulty(value) {
+  if (value === 'easy' || value === 'hard') {
+    return value;
+  }
+  return 'medium';
+}
+
+function getQuestionDifficultyBuckets(baseQuiz) {
+  if (!Array.isArray(baseQuiz) || baseQuiz.length === 0) {
+    return { easy: [], medium: [], hard: [] };
+  }
+
+  const sorted = [...baseQuiz].sort((a, b) => Number(a.id) - Number(b.id));
+  const total = sorted.length;
+  const easyEnd = Math.ceil(total * 0.34);
+  const mediumEnd = Math.ceil(total * 0.67);
+
+  return {
+    easy: sorted.slice(0, easyEnd),
+    medium: sorted.slice(easyEnd, mediumEnd),
+    hard: sorted.slice(mediumEnd),
+  };
+}
+
+function getAdaptiveQuestionTarget(totalQuestions) {
+  if (totalQuestions <= MIN_ADAPTIVE_QUIZ_COUNT) {
+    return totalQuestions;
+  }
+
+  const envValue = Number(process.env.ADAPTIVE_QUIZ_QUESTION_COUNT);
+  const configured = Number.isFinite(envValue) && envValue > 0 ? envValue : DEFAULT_ADAPTIVE_QUIZ_COUNT;
+  return Math.max(MIN_ADAPTIVE_QUIZ_COUNT, Math.min(totalQuestions, configured));
+}
+
+function buildAdaptiveQuestionSet(baseQuiz, targetDifficulty) {
+  if (!Array.isArray(baseQuiz) || baseQuiz.length <= 1) {
+    return Array.isArray(baseQuiz) ? [...baseQuiz] : [];
+  }
+
+  const normalizedDifficulty = normalizeDifficulty(targetDifficulty);
+  const buckets = getQuestionDifficultyBuckets(baseQuiz);
+  const targetCount = getAdaptiveQuestionTarget(baseQuiz.length);
+
+  if (targetCount >= baseQuiz.length) {
+    return shuffleArray(baseQuiz);
+  }
+
+  let desired = { easy: 2, medium: 2, hard: targetCount - 4 };
+  if (normalizedDifficulty === 'easy') {
+    desired = {
+      easy: Math.ceil(targetCount * 0.5),
+      medium: Math.ceil(targetCount * 0.35),
+      hard: targetCount - Math.ceil(targetCount * 0.5) - Math.ceil(targetCount * 0.35),
+    };
+  }
+  if (normalizedDifficulty === 'medium') {
+    desired = {
+      easy: Math.ceil(targetCount * 0.3),
+      medium: Math.ceil(targetCount * 0.45),
+      hard: targetCount - Math.ceil(targetCount * 0.3) - Math.ceil(targetCount * 0.45),
+    };
+  }
+
+  const difficultyPriority =
+    normalizedDifficulty === 'easy' ? ['easy', 'medium', 'hard'] : normalizedDifficulty === 'hard' ? ['hard', 'medium', 'easy'] : ['medium', 'easy', 'hard'];
+
+  const pools = {
+    easy: shuffleArray(buckets.easy),
+    medium: shuffleArray(buckets.medium),
+    hard: shuffleArray(buckets.hard),
+  };
+  const selected = [];
+
+  function takeFromPool(name, count) {
+    const pool = pools[name] || [];
+    const actual = Math.max(0, Math.min(count, pool.length));
+    for (let i = 0; i < actual; i++) {
+      selected.push(pool.pop());
+    }
+  }
+
+  takeFromPool('easy', desired.easy);
+  takeFromPool('medium', desired.medium);
+  takeFromPool('hard', desired.hard);
+
+  while (selected.length < targetCount) {
+    let added = false;
+    for (const key of difficultyPriority) {
+      if (pools[key].length > 0) {
+        selected.push(pools[key].pop());
+        added = true;
+        break;
+      }
+    }
+    if (!added) {
+      break;
+    }
+  }
+
+  return shuffleArray(selected);
+}
+
+function getAverageSecondsPerQuestion(attempts) {
+  if (!Array.isArray(attempts) || attempts.length === 0) {
+    return null;
+  }
+
+  const values = attempts
+    .map((attempt) => {
+      const totalQuestions = Number(attempt.total_questions) || 0;
+      const durationSeconds = Number(attempt.duration_seconds) || 0;
+      if (totalQuestions <= 0 || durationSeconds <= 0) {
+        return null;
+      }
+      return durationSeconds / totalQuestions;
+    })
+    .filter((v) => v !== null);
+
+  if (!values.length) {
+    return null;
+  }
+
+  return values.reduce((sum, v) => sum + v, 0) / values.length;
+}
+
+function getRecommendedDifficultyFromAttempts(attempts) {
+  if (!Array.isArray(attempts) || attempts.length === 0) {
+    return 'medium';
+  }
+
+  const avgScore = Math.round(
+    attempts.reduce((sum, attempt) => sum + (Number(attempt.score) || 0), 0) / attempts.length
+  );
+  const avgSecondsPerQuestion = getAverageSecondsPerQuestion(attempts);
+  const recentTwo = attempts.slice(0, 2);
+  const recentTwoAvg = recentTwo.length
+    ? recentTwo.reduce((sum, attempt) => sum + (Number(attempt.score) || 0), 0) / recentTwo.length
+    : avgScore;
+
+  if (recentTwo.length === 2 && recentTwoAvg >= 88 && (avgSecondsPerQuestion || 0) <= FAST_SECONDS_PER_QUESTION) {
+    return 'hard';
+  }
+
+  if (avgScore >= 82 && (avgSecondsPerQuestion || 0) <= FAST_SECONDS_PER_QUESTION) {
+    return 'hard';
+  }
+
+  if (avgScore < 60 || (avgSecondsPerQuestion && avgSecondsPerQuestion >= SLOW_SECONDS_PER_QUESTION)) {
+    return 'easy';
+  }
+
+  return 'medium';
+}
+
+function getDifficultyLabel(difficulty) {
+  const normalized = normalizeDifficulty(difficulty);
+  if (normalized === 'easy') {
+    return 'Easy';
+  }
+  if (normalized === 'hard') {
+    return 'Hard';
+  }
+  return 'Medium';
+}
+
+function buildDashboardAnalytics(levels, allProgress, attempts) {
+  const attemptsByLevel = attempts.reduce((acc, attempt) => {
+    const key = Number(attempt.level_id);
+    if (!acc[key]) {
+      acc[key] = [];
+    }
+    acc[key].push(attempt);
+    return acc;
+  }, {});
+
+  const progressByLevel = allProgress.reduce((acc, item) => {
+    acc[Number(item.level_id)] = item;
+    return acc;
+  }, {});
+
+  const topicStats = levels.map((level) => {
+    const levelAttempts = attemptsByLevel[level.id] || [];
+    const avgScore = levelAttempts.length
+      ? Math.round(levelAttempts.reduce((sum, item) => sum + (Number(item.score) || 0), 0) / levelAttempts.length)
+      : null;
+    const avgSecondsPerQuestion = levelAttempts.length
+      ? getAverageSecondsPerQuestion(levelAttempts)
+      : null;
+    const nextDifficulty = getRecommendedDifficultyFromAttempts(levelAttempts.slice(0, QUIZ_RECENT_ATTEMPTS_FOR_ADAPTIVE));
+    const progress = progressByLevel[level.id];
+
+    return {
+      levelId: level.id,
+      topic: level.title,
+      attempts: levelAttempts.length,
+      avgScore,
+      avgSecondsPerQuestion:
+        avgSecondsPerQuestion !== null ? Number(avgSecondsPerQuestion.toFixed(1)) : null,
+      completed: !!progress?.completed,
+      nextDifficulty,
+      nextDifficultyLabel: getDifficultyLabel(nextDifficulty),
+      lessonCount: Array.isArray(level.lessons) ? level.lessons.length : 0,
+    };
+  });
+
+  const ranked = topicStats
+    .filter((item) => item.attempts > 0 && item.avgScore !== null)
+    .map((item) => ({
+      ...item,
+      rating:
+        item.avgScore -
+        Math.max(0, ((item.avgSecondsPerQuestion || FAST_SECONDS_PER_QUESTION) - 30) * 0.6),
+    }));
+
+  const strengths = [...ranked]
+    .sort((a, b) => b.rating - a.rating)
+    .slice(0, 3)
+    .map((item) => ({
+      levelId: item.levelId,
+      topic: item.topic,
+      avgScore: item.avgScore,
+      avgSecondsPerQuestion: item.avgSecondsPerQuestion,
+    }));
+
+  const weakAreas = [...ranked]
+    .sort((a, b) => a.rating - b.rating)
+    .slice(0, 3)
+    .map((item) => ({
+      levelId: item.levelId,
+      topic: item.topic,
+      avgScore: item.avgScore,
+      avgSecondsPerQuestion: item.avgSecondsPerQuestion,
+    }));
+
+  const primaryWeak = weakAreas[0];
+  let recommendedLevel = null;
+  let reason = '';
+
+  if (primaryWeak) {
+    recommendedLevel = levels.find((level) => level.id === primaryWeak.levelId) || null;
+    reason = 'Focus on your weakest topic based on recent quiz accuracy and speed.';
+  }
+
+  if (!recommendedLevel) {
+    recommendedLevel = levels.find((level) => !progressByLevel[level.id]?.completed) || levels[0] || null;
+    reason = 'Continue your learning path with the next available level.';
+  }
+
+  let recommendedNextLesson = null;
+  if (recommendedLevel) {
+    const lessons = Array.isArray(recommendedLevel.lessons) ? recommendedLevel.lessons : [];
+    if (lessons.length > 0) {
+      const lessonIndex = primaryWeak && primaryWeak.avgScore !== null && primaryWeak.avgScore < 60
+        ? 0
+        : Math.min(lessons.length - 1, Math.floor(lessons.length / 2));
+
+      recommendedNextLesson = {
+        levelId: recommendedLevel.id,
+        levelTitle: recommendedLevel.title,
+        lessonId: lessons[lessonIndex].id,
+        lessonTitle: lessons[lessonIndex].title,
+        reason,
+      };
+    }
+  }
+
+  return {
+    topicStats,
+    strengths,
+    weakAreas,
+    recommendedNextLesson,
+  };
+}
+
+function buildQuizForAttempt(req, levelId, baseQuiz, targetDifficulty) {
   if (!Array.isArray(baseQuiz) || baseQuiz.length <= 1) {
     return Array.isArray(baseQuiz) ? [...baseQuiz] : [];
   }
@@ -39,7 +318,7 @@ function buildQuizForAttempt(req, levelId, baseQuiz) {
   const previousOrder = Array.isArray(lastOrderByLevel[levelKey]) ? lastOrderByLevel[levelKey] : [];
   const previousOrderSignature = previousOrder.join(',');
 
-  let candidate = shuffleArray(baseQuiz);
+  let candidate = shuffleArray(buildAdaptiveQuestionSet(baseQuiz, targetDifficulty));
 
   for (let attempt = 0; attempt < QUIZ_MAX_GENERATION_ATTEMPTS; attempt++) {
     const leadSignature = getLeadSignature(candidate);
@@ -51,7 +330,7 @@ function buildQuizForAttempt(req, levelId, baseQuiz) {
       break;
     }
 
-    candidate = shuffleArray(baseQuiz);
+    candidate = shuffleArray(buildAdaptiveQuestionSet(baseQuiz, targetDifficulty));
   }
 
   return candidate;
@@ -102,6 +381,7 @@ router.get('/data/dashboard', async (req, res) => {
     // Get user's progress
     const allProgress = await Progress.getAllProgress(userId);
     const stats = await Progress.getStats(userId, levels.length);
+    const attempts = await Progress.getRecentQuizAttempts(userId, 100);
 
     // Get completed levels with scores
     const completedLevels = allProgress
@@ -116,10 +396,13 @@ router.get('/data/dashboard', async (req, res) => {
         };
       });
 
+    const analytics = buildDashboardAnalytics(levels, allProgress, attempts);
+
     res.json({
       user: user,
       stats: stats,
       completedLevels: completedLevels,
+      analytics,
       allLevels: levels.map((l) => ({
         id: l.id,
         title: l.title,
@@ -147,19 +430,34 @@ router.get('/:levelId', async (req, res) => {
 
     // Get user's progress for this level
     const progress = await Progress.getProgress(userId, levelId);
-    const randomizedQuiz = buildQuizForAttempt(req, levelId, level.quiz || []);
+    const recentAttempts = await Progress.getRecentQuizAttemptsForLevel(
+      userId,
+      levelId,
+      QUIZ_RECENT_ATTEMPTS_FOR_ADAPTIVE
+    );
+    const adaptiveDifficulty = getRecommendedDifficultyFromAttempts(recentAttempts);
+    const randomizedQuiz = buildQuizForAttempt(req, levelId, level.quiz || [], adaptiveDifficulty);
     const levelKey = String(levelId);
 
     if (!req.session.quizAttemptOrder) {
       req.session.quizAttemptOrder = {};
     }
+    if (!req.session.quizAttemptMeta) {
+      req.session.quizAttemptMeta = {};
+    }
     req.session.quizAttemptOrder[levelKey] = randomizedQuiz.map((question) => question.id);
+    req.session.quizAttemptMeta[levelKey] = {
+      startedAt: Date.now(),
+      difficulty: adaptiveDifficulty,
+      totalQuestions: randomizedQuiz.length,
+    };
 
     res.render('level', {
       level: {
         ...level,
         quiz: randomizedQuiz,
       },
+      adaptiveDifficulty: getDifficultyLabel(adaptiveDifficulty),
       progress: progress || { completed: false, score: null },
       lessons: level.lessons || [],
     });
@@ -174,18 +472,32 @@ router.post('/:levelId/quiz', async (req, res) => {
   try {
     const levelId = parseInt(req.params.levelId);
     const userId = req.session.userId;
-    const answers = req.body.answers;
+    const answers = req.body.answers || {};
     const levelKey = String(levelId);
 
     const levels = await levelsStore.getLevels();
     const level = levels.find((l) => l.id === levelId);
-    if (!level || !level.quiz) {
+    if (!level || !Array.isArray(level.quiz) || level.quiz.length === 0) {
       return res.status(404).render('404', { error: 'Level or quiz not found' });
     }
 
+    const attemptOrderByLevel = req.session.quizAttemptOrder || {};
+    const attemptMetaByLevel = req.session.quizAttemptMeta || {};
+    const attemptOrder = Array.isArray(attemptOrderByLevel[levelKey])
+      ? attemptOrderByLevel[levelKey]
+      : [];
+    const questionById = (level.quiz || []).reduce((acc, question) => {
+      acc[question.id] = question;
+      return acc;
+    }, {});
+    const presentedQuestions = attemptOrder
+      .map((questionId) => questionById[questionId])
+      .filter((question) => !!question);
+    const quizQuestions = presentedQuestions.length > 0 ? presentedQuestions : level.quiz;
+
     // Calculate score
     let correctCount = 0;
-    const questionResults = level.quiz.map((question) => {
+    const questionResults = quizQuestions.map((question) => {
       const userAnswerIndex = parseInt(answers[`q${question.id}`]);
       const isCorrect = userAnswerIndex === question.correct;
       if (isCorrect) correctCount++;
@@ -200,22 +512,34 @@ router.post('/:levelId/quiz', async (req, res) => {
       };
     });
 
-    const totalQuestions = level.quiz.length;
+    const totalQuestions = quizQuestions.length;
     const score = Math.round((correctCount / totalQuestions) * 100);
     const passed = score >= 70;
+    const attemptMeta = attemptMetaByLevel[levelKey] || {};
+    const startedAt = Number(attemptMeta.startedAt) || Date.now();
+    const durationSeconds = Math.max(1, Math.round((Date.now() - startedAt) / 1000));
+    const attemptDifficulty = normalizeDifficulty(attemptMeta.difficulty);
 
     // Save progress
     await Progress.saveProgress(userId, levelId, score, passed);
+    await Progress.saveQuizAttempt({
+      userId,
+      levelId,
+      score,
+      correctCount,
+      totalQuestions,
+      durationSeconds,
+      difficulty: attemptDifficulty,
+    });
 
-    const attemptOrderByLevel = req.session.quizAttemptOrder || {};
     const lastOrderByLevel = req.session.quizLastOrder || {};
     const recentLeadsByLevel = req.session.quizRecentLeads || {};
-    const attemptOrder = Array.isArray(attemptOrderByLevel[levelKey])
-      ? attemptOrderByLevel[levelKey]
-      : level.quiz.map((question) => question.id);
-    const leadSignature = attemptOrder.slice(0, Math.min(QUIZ_LEAD_SIZE, attemptOrder.length)).join(',');
+    const effectiveOrder = attemptOrder.length > 0 ? attemptOrder : level.quiz.map((question) => question.id);
+    const leadSignature = effectiveOrder
+      .slice(0, Math.min(QUIZ_LEAD_SIZE, effectiveOrder.length))
+      .join(',');
 
-    lastOrderByLevel[levelKey] = attemptOrder;
+    lastOrderByLevel[levelKey] = effectiveOrder;
     recentLeadsByLevel[levelKey] = [
       ...(Array.isArray(recentLeadsByLevel[levelKey]) ? recentLeadsByLevel[levelKey] : []),
       leadSignature,
@@ -224,7 +548,9 @@ router.post('/:levelId/quiz', async (req, res) => {
     req.session.quizLastOrder = lastOrderByLevel;
     req.session.quizRecentLeads = recentLeadsByLevel;
     req.session.quizAttemptOrder = attemptOrderByLevel;
+    req.session.quizAttemptMeta = attemptMetaByLevel;
     delete req.session.quizAttemptOrder[levelKey];
+    delete req.session.quizAttemptMeta[levelKey];
 
     res.render('result', {
       levelId: levelId,

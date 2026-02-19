@@ -54,6 +54,38 @@
       </div>
     </div>
 
+    <!-- Learner Analytics -->
+    <h4 class="mb-3">Learner Analytics</h4>
+    <div class="row g-4 mb-5">
+      <div class="col-lg-4">
+        <div class="card h-100">
+          <div class="card-body">
+            <h5 class="card-title">Strengths</h5>
+            <ul id="strengthsList" class="mb-0 ps-3"></ul>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-4">
+        <div class="card h-100">
+          <div class="card-body">
+            <h5 class="card-title">Weak Areas</h5>
+            <ul id="weakAreasList" class="mb-0 ps-3"></ul>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-4">
+        <div class="card h-100">
+          <div class="card-body">
+            <h5 class="card-title">Recommended Next Lesson</h5>
+            <p id="recommendedLesson" class="mb-0 text-muted">No recommendation yet.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h4 class="mb-3">Per-Topic Performance</h4>
+    <div id="topicAnalytics" class="row g-3 mb-5"></div>
+
     <!-- Levels Grid -->
     <h4 class="mb-4">Learning Levels</h4>
     <div class="row g-4">
@@ -70,6 +102,62 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', async () => {
+  const listOrEmpty = (items, formatter) => {
+    if (!items || items.length === 0) {
+      return '<li class="text-muted">Not enough quiz data yet.</li>';
+    }
+    return items.map(formatter).join('');
+  };
+
+  const renderAnalytics = (analytics) => {
+    const strengthsList = document.getElementById('strengthsList');
+    const weakAreasList = document.getElementById('weakAreasList');
+    const recommendedLesson = document.getElementById('recommendedLesson');
+    const topicAnalytics = document.getElementById('topicAnalytics');
+
+    strengthsList.innerHTML = listOrEmpty(analytics?.strengths, (item) =>
+      `<li><strong>${item.topic}</strong> — ${item.avgScore}% avg</li>`
+    );
+
+    weakAreasList.innerHTML = listOrEmpty(analytics?.weakAreas, (item) =>
+      `<li><strong>${item.topic}</strong> — ${item.avgScore}% avg</li>`
+    );
+
+    if (analytics?.recommendedNextLesson) {
+      const recommendation = analytics.recommendedNextLesson;
+      recommendedLesson.innerHTML = `
+        <strong>${recommendation.levelTitle}</strong><br>
+        ${recommendation.lessonTitle}<br>
+        <small>${recommendation.reason}</small>
+      `;
+    } else {
+      recommendedLesson.textContent = 'Complete at least one quiz to get a personalized recommendation.';
+    }
+
+    topicAnalytics.innerHTML = '';
+    if (!analytics?.topicStats || analytics.topicStats.length === 0) {
+      topicAnalytics.innerHTML = '<div class="col-12"><div class="alert alert-info mb-0">No topic analytics available yet.</div></div>';
+      return;
+    }
+
+    analytics.topicStats.forEach((topic) => {
+      const card = document.createElement('div');
+      card.className = 'col-lg-4';
+      card.innerHTML = `
+        <div class="card h-100">
+          <div class="card-body">
+            <h6 class="card-title mb-2">${topic.topic}</h6>
+            <p class="mb-1"><strong>Attempts:</strong> ${topic.attempts}</p>
+            <p class="mb-1"><strong>Average Score:</strong> ${topic.avgScore !== null ? topic.avgScore + '%' : '--'}</p>
+            <p class="mb-1"><strong>Avg Time/Question:</strong> ${topic.avgSecondsPerQuestion !== null ? topic.avgSecondsPerQuestion + 's' : '--'}</p>
+            <p class="mb-0"><strong>Next Difficulty:</strong> ${topic.nextDifficultyLabel}</p>
+          </div>
+        </div>
+      `;
+      topicAnalytics.appendChild(card);
+    });
+  };
+
   try {
     const response = await fetch('/levels/data/dashboard');
     const data = await response.json();
@@ -84,6 +172,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const progressPercent = data.stats.progressPercentage;
     document.getElementById('progressBar').style.width = progressPercent + '%';
     document.getElementById('progressText').textContent = progressPercent + '%';
+
+    renderAnalytics(data.analytics);
 
     // Render levels
     const container = document.getElementById('levelsContainer');
