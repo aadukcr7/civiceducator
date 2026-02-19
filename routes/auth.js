@@ -56,6 +56,14 @@ router.post(
   ],
   async (req, res) => {
     try {
+      const limiter = req.app.locals.concurrentUserLimiter;
+      if (limiter && limiter.isAtCapacity()) {
+        return res.status(503).render('register', {
+          errors: [{ msg: 'Maximum active users reached. Please try again shortly.' }],
+          old: { username: req.body.username, email: req.body.email },
+        });
+      }
+
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
         return res.render('register', {
@@ -88,6 +96,9 @@ router.post(
       req.session.userId = newUser.id;
       req.session.username = newUser.username;
       req.session.email = newUser.email;
+      if (limiter) {
+        limiter.registerSession(req.sessionID);
+      }
 
       res.redirect('/dashboard');
     } catch (err) {
@@ -115,6 +126,14 @@ router.post(
   ],
   async (req, res) => {
     try {
+      const limiter = req.app.locals.concurrentUserLimiter;
+      if (limiter && limiter.isAtCapacity()) {
+        return res.status(503).render('login', {
+          errors: [{ msg: 'Maximum active users reached. Please try again shortly.' }],
+          old: { email: req.body.email },
+        });
+      }
+
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
         return res.render('login', { errors: errors.array(), old: { email: req.body.email } });
@@ -151,6 +170,9 @@ router.post(
       req.session.userId = user.id;
       req.session.username = user.username;
       req.session.email = user.email;
+      if (limiter) {
+        limiter.registerSession(req.sessionID);
+      }
 
       const returnTo = req.session.returnTo || '/dashboard';
       delete req.session.returnTo;
@@ -167,9 +189,15 @@ router.post(
 
 // Logout
 router.get('/logout', isAuthenticated, (req, res) => {
+  const limiter = req.app.locals.concurrentUserLimiter;
+  const currentSessionId = req.sessionID;
+
   req.session.destroy((err) => {
     if (err) {
       return res.render('404', { error: 'Logout failed' });
+    }
+    if (limiter) {
+      limiter.unregisterSession(currentSessionId);
     }
     res.redirect('/');
   });

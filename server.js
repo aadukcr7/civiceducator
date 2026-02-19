@@ -14,9 +14,17 @@ const authRoutes = require('./routes/auth');
 const levelsRoutes = require('./routes/levels');
 const adminRoutes = require('./routes/admin');
 const { isAuthenticated } = require('./middleware/auth');
+const { createConcurrentUserLimiter } = require('./middleware/concurrentUsers');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const MAX_CONCURRENT_USERS = Number(process.env.MAX_CONCURRENT_USERS) || 0;
+
+const concurrentUserLimiter = createConcurrentUserLimiter({
+  maxUsers: MAX_CONCURRENT_USERS,
+});
+
+app.locals.concurrentUserLimiter = concurrentUserLimiter;
 
 // Trust proxy (required for Render HTTPS)
 if (process.env.NODE_ENV === 'production') {
@@ -105,6 +113,8 @@ app.use((req, res, next) => {
   }
   next();
 });
+
+app.use(concurrentUserLimiter.middleware);
 
 // Routes
 app.use('/auth', authRoutes);

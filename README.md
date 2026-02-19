@@ -39,6 +39,7 @@ PORT=5000
 SESSION_SECRET=change_me
 DATABASE_PATH=./civic_education.db
 PASSING_SCORE=70
+MAX_CONCURRENT_USERS=100
 ```
 
 4. Run the app
@@ -80,6 +81,7 @@ civic/
 - Use strong `SESSION_SECRET` in production; set `secure` cookies behind HTTPS
 - CSRF tokens are required on all forms; do not remove hidden `_csrf`
 - Rate limiting is applied globally; tune thresholds per environment
+- Optional concurrent user cap via `MAX_CONCURRENT_USERS` (set `0` or unset to disable)
 - Input validation enforced server-side via `express-validator`
 
 ## Deployment
