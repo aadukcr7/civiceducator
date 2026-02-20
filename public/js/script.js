@@ -2,6 +2,8 @@
 
 // Form validation
 document.addEventListener('DOMContentLoaded', () => {
+  initPasswordToggles();
+
   // Add smooth scrolling for lesson links
   const lessonLinks = document.querySelectorAll('.lesson-item');
   lessonLinks.forEach((link) => {
@@ -65,7 +67,7 @@ function getPasswordStrength(password) {
 
 function updatePasswordStrengthUI(strength) {
   const input = document.getElementById('password');
-  const parent = input.parentElement;
+  const parent = input.closest('.password-field-wrapper') || input.parentElement;
 
   // Remove existing strength indicator
   const existingIndicator = parent.querySelector('.password-strength');
@@ -82,6 +84,31 @@ function updatePasswordStrengthUI(strength) {
     indicator.innerHTML = `<small class="text-${colors[strength - 1]}"><strong>Strength: ${labels[strength - 1]}</strong></small>`;
     parent.appendChild(indicator);
   }
+}
+
+function initPasswordToggles() {
+  const toggleButtons = document.querySelectorAll('.password-toggle');
+
+  toggleButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      const inputId = button.getAttribute('data-toggle-password');
+      const input = document.getElementById(inputId);
+
+      if (!input) return;
+
+      const showing = input.type === 'text';
+      input.type = showing ? 'password' : 'text';
+
+      const icon = button.querySelector('i');
+      if (icon) {
+        icon.classList.toggle('bi-eye', showing);
+        icon.classList.toggle('bi-eye-slash', !showing);
+      }
+
+      button.setAttribute('aria-label', showing ? 'Show password' : 'Hide password');
+      button.setAttribute('aria-pressed', (!showing).toString());
+    });
+  });
 }
 
 // Show loading state during form submission
