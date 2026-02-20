@@ -3,6 +3,7 @@
 // Form validation
 document.addEventListener('DOMContentLoaded', () => {
   initPasswordToggles();
+  initLessonSidebarControls();
 
   // Add smooth scrolling for lesson links
   const lessonLinks = document.querySelectorAll('.lesson-item');
@@ -107,6 +108,33 @@ function initPasswordToggles() {
 
       button.setAttribute('aria-label', showing ? 'Show password' : 'Hide password');
       button.setAttribute('aria-pressed', (!showing).toString());
+    });
+  });
+}
+
+function initLessonSidebarControls() {
+  const lessonList = document.querySelector('.lesson-list');
+  if (!lessonList) return;
+
+  const jumpSelect = document.getElementById('lessonJump');
+  if (jumpSelect) {
+    jumpSelect.addEventListener('change', (e) => {
+      const targetId = e.target.value;
+      if (!targetId) return;
+
+      const target = document.getElementById(targetId);
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth' });
+      }
+    });
+  }
+
+  const scrollButtons = document.querySelectorAll('.lesson-scroll-btn');
+  scrollButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      const direction = button.getAttribute('data-scroll-direction');
+      const amount = direction === 'up' ? -220 : 220;
+      lessonList.scrollBy({ top: amount, behavior: 'smooth' });
     });
   });
 }

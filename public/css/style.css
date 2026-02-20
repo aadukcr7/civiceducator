@@ -382,6 +382,23 @@ main {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  max-height: 62vh;
+  overflow-y: auto;
+  padding-right: 0.35rem;
+}
+
+.lesson-sidebar-controls .input-group-text {
+  background: var(--bg);
+  border-color: #e0e0e0;
+}
+
+.lesson-sidebar-controls .form-select {
+  border-color: #e0e0e0;
+}
+
+.lesson-sidebar-controls .form-select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 0.2rem rgba(0, 56, 147, 0.25);
 }
 
 .lesson-item {
@@ -399,6 +416,12 @@ main {
   background: #d4e9f7;
   color: var(--primary);
   transform: translateX(5px);
+}
+
+.lesson-item.active-lesson {
+  background: #d4e9f7;
+  color: var(--primary);
+  border: 1px solid var(--border);
 }
 
 .lesson-list .lesson-number {
@@ -712,6 +735,10 @@ main {
   .lesson-sidebar {
     position: static;
     margin-bottom: 2rem;
+  }
+
+  .lesson-list {
+    max-height: 40vh;
   }
 
   .score-display {

@@ -7,10 +7,31 @@
       <div class="col-lg-3">
         <div class="lesson-sidebar">
           <h5 class="mb-3"><%= level.title %></h5>
+          <% if (lessons && lessons.length > 0) { %>
+            <div class="lesson-sidebar-controls mb-3">
+              <div class="input-group input-group-sm mb-2">
+                <label class="input-group-text" for="lessonJump">Jump</label>
+                <select id="lessonJump" class="form-select" aria-label="Jump to lesson">
+                  <option value="">Select lesson...</option>
+                  <% lessons.forEach((lesson, index) => { %>
+                    <option value="lesson-<%= lesson.id %>">Lesson <%= index + 1 %>: <%= lesson.title %></option>
+                  <% }); %>
+                </select>
+              </div>
+              <div class="d-flex gap-2">
+                <button type="button" class="btn btn-outline-primary btn-sm flex-fill lesson-scroll-btn" data-scroll-direction="up">
+                  <i class="bi bi-arrow-up"></i> Up
+                </button>
+                <button type="button" class="btn btn-outline-primary btn-sm flex-fill lesson-scroll-btn" data-scroll-direction="down">
+                  <i class="bi bi-arrow-down"></i> Down
+                </button>
+              </div>
+            </div>
+          <% } %>
           <div class="lesson-list">
             <% if (lessons && lessons.length > 0) { %>
               <% lessons.forEach((lesson, index) => { %>
-                <a href="#lesson-<%= lesson.id %>" class="lesson-item active-lesson">
+                <a href="#lesson-<%= lesson.id %>" class="lesson-item <%= index === 0 ? 'active-lesson' : '' %>">
                   <span class="lesson-number"><%= index + 1 %></span>
                   <span class="lesson-title"><%= lesson.title %></span>
                 </a>
