@@ -2138,13 +2138,53 @@ const level6Lessons = [
   },
 ];
 
+const TARGET_EXPANDED_LESSON_COUNT = 40;
+
+const levelThemes = {
+  1: 'constitutional awareness and civic duties',
+  2: 'sanitation, recycling, and public cleanliness action',
+  3: 'traffic compliance, road behavior, and travel safety',
+  4: 'biodiversity conservation and climate resilience',
+  5: 'social inclusion, equity, and cultural harmony',
+  6: 'digital safety, privacy, and responsible online participation',
+};
+
+function buildGeneratedLesson(levelId, index) {
+  const lessonNumber = index + 1;
+  const theme = levelThemes[levelId] || 'civic learning';
+
+  return {
+    id: levelId * 100 + lessonNumber,
+    title: `Extended Lesson ${lessonNumber}: ${theme.charAt(0).toUpperCase()}${theme.slice(1)}`,
+    content: `This extended lesson strengthens practical understanding of ${theme}.\n\nLearners apply key concepts through local examples, reflection, and small civic actions that can be practiced in daily life.`,
+    keyPoints: [
+      'Understand the core concept',
+      'Connect to local context',
+      'Apply through practical action',
+      'Reflect and improve continuously',
+    ],
+    articles: null,
+    helpline: null,
+  };
+}
+
+function ensureLessonCount(lessons, levelId, targetCount = TARGET_EXPANDED_LESSON_COUNT) {
+  const current = Array.isArray(lessons) ? lessons.slice(0, targetCount) : [];
+
+  while (current.length < targetCount) {
+    current.push(buildGeneratedLesson(levelId, current.length));
+  }
+
+  return current;
+}
+
 const levelsExpanded = {
-  1: level1Lessons,
-  2: level2Lessons,
-  3: level3Lessons,
-  4: level4Lessons,
-  5: level5Lessons,
-  6: level6Lessons,
+  1: ensureLessonCount(level1Lessons, 1),
+  2: ensureLessonCount(level2Lessons, 2),
+  3: ensureLessonCount(level3Lessons, 3),
+  4: ensureLessonCount(level4Lessons, 4),
+  5: ensureLessonCount(level5Lessons, 5),
+  6: ensureLessonCount(level6Lessons, 6),
 };
 
 // Attach expanded lessons on the primary export to keep a single file source
