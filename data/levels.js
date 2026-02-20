@@ -2147,6 +2147,184 @@ const levelsExpanded = {
   6: level6Lessons,
 };
 
+const levelFocus = {
+  1: 'constitutional rights, institutions, and civic responsibilities',
+  2: 'public sanitation, waste systems, and cleanliness governance',
+  3: 'road safety behavior, legal compliance, and emergency response',
+  4: 'conservation policy, ecosystem protection, and climate resilience',
+  5: 'equity, inclusion, social harmony, and rights protection',
+  6: 'digital safety, information literacy, and responsible online behavior',
+};
+
+const additionalLessonTitles = {
+  1: [
+    'Separation of Powers in Nepal',
+    'Parliamentary Procedure Basics',
+    'Constitutional Amendment Process',
+    'Fundamental Right to Information',
+    'Public Interest Litigation',
+    'Local Government Constitutional Mandate',
+    'Directive Principles and State Policies',
+    'Emergency Provisions and Safeguards',
+    'Independent Constitutional Commissions',
+    'Judicial Review and Constitutional Remedies',
+    'Citizenship by Descent and Naturalization',
+    'Federalism and Intergovernmental Coordination',
+    'Electoral Rights and Voter Responsibilities',
+    'Rule of Law and Equality Before Law',
+    'Constitutional Bodies: Roles and Limits',
+    'Budget Accountability and Public Oversight',
+    'Constitutional Ethics in Public Service',
+    'Access to Justice Mechanisms',
+    'Constitutional Protection of Minorities',
+    'Civic Participation in Lawmaking',
+  ],
+  2: [
+    'Household Waste Reduction Planning',
+    'Door-to-Door Collection Efficiency',
+    'Landfill Risk and Mitigation',
+    'Neighborhood Bin Placement Standards',
+    'Composting for Urban Homes',
+    'Public Toilet Management Systems',
+    'School Sanitation Clubs',
+    'Medical and Hazardous Waste Protocols',
+    'Safe Plastic Alternatives in Daily Use',
+    'Littering Fines and Municipal Enforcement',
+    'Community Riverbank Cleanliness Programs',
+    'Waste Segregation Monitoring Tools',
+    'Recycling Value Chains in Nepal',
+    'Food Waste Prevention at Household Level',
+    'Festival Waste Control Strategies',
+    'Waste Worker Dignity and Safety',
+    'Drain Blockage Early Warning Practices',
+    'Local Bylaws on Public Cleanliness',
+    'Public Awareness Campaign Design',
+    'Sanitation Data for Ward Planning',
+  ],
+  3: [
+    'Intersection Conflict Prevention',
+    'School Zone Traffic Calming',
+    'Seatbelt Compliance and Enforcement',
+    'Helmet Standards for Riders',
+    'Safe Overtaking Decision Rules',
+    'Defensive Driving Under Pressure',
+    'Night Visibility and Reflective Safety',
+    'Driving in Rain and Landslide Conditions',
+    'Fatigue Management for Long Routes',
+    'Vehicle Readiness Inspection Routine',
+    'Pedestrian Priority and Crosswalk Safety',
+    'Cyclist Awareness for Motorists',
+    'Public Transport Stop Discipline',
+    'Emergency Scene Protection Steps',
+    'Crash Documentation and Reporting',
+    'Insurance Claim Basics After Collision',
+    'Safe Speed Selection by Road Type',
+    'Road Rage Prevention Techniques',
+    'Traffic Signal Timing Awareness',
+    'Rural Road Animal Hazard Response',
+  ],
+  4: [
+    'Watershed Protection and Management',
+    'Wetland Ecosystem Preservation',
+    'Community Forest Governance Models',
+    'Human-Wildlife Conflict Solutions',
+    'Invasive Species Control Measures',
+    'Forest Fire Preparedness and Response',
+    'River Source Conservation Practices',
+    'Soil Erosion Prevention Techniques',
+    'Urban Green Space Planning',
+    'Climate-Smart Farming Practices',
+    'Pollinator Conservation for Food Security',
+    'Plastic Reduction in Protected Areas',
+    'Eco-Tourism Code of Conduct',
+    'Biodiversity Monitoring by Citizens',
+    'Local Air Pollution Mitigation Plans',
+    'Nature-Based Flood Management',
+    'Environmental Impact Assessment Literacy',
+    'Community Climate Adaptation Plans',
+    'Sustainable Quarry and Mining Oversight',
+    'Environmental Stewardship in Schools',
+  ],
+  5: [
+    'Equality and Non-Discrimination Principles',
+    'Gender-Responsive Public Services',
+    'Disability Inclusion in Public Spaces',
+    'Language Rights in Education and Services',
+    'Interfaith Dialogue and Trust Building',
+    'Caste-Based Discrimination Prevention',
+    'Conflict Mediation for Communities',
+    'Inclusive Meeting Facilitation',
+    'Representation in Local Decision-Making',
+    'Child Safeguarding Standards',
+    'Senior Citizen Social Inclusion',
+    'Migrant and Returnee Reintegration',
+    'Public Space Accessibility Audits',
+    'Social Protection Access Pathways',
+    'Youth Leadership for Harmony',
+    'Anti-Bullying Systems in Schools',
+    'Community Sports for Social Cohesion',
+    'Human Trafficking Risk Awareness',
+    'Cultural Heritage Respect Practices',
+    'Local Peacebuilding Initiatives',
+  ],
+  6: [
+    'Password Hygiene and Account Security',
+    'Two-Factor Authentication Workflows',
+    'Phishing Detection and Response',
+    'Deepfake Verification Techniques',
+    'Fact-Checking Viral Information',
+    'Safe Online Payment Behavior',
+    'Mobile Wallet Protection Practices',
+    'App Permission and Data Consent Review',
+    'Cyberbullying Reporting Pathways',
+    'Cloud Storage Safety Controls',
+    'Digital Footprint Self-Audit',
+    'Copyright and Fair Use Online',
+    'Responsible AI Content Sharing',
+    'Public Wi-Fi Risk Management',
+    'Home Network Security Basics',
+    'Backup and Recovery Planning',
+    'Online Scam Identification Skills',
+    'Social Media Privacy Management',
+    'E-Governance Portal Safety',
+    'Community Cyber Awareness Leadership',
+  ],
+};
+
+function appendAdditionalLessons(baseLessons, levelId) {
+  const lessons = Array.isArray(baseLessons) ? [...baseLessons] : [];
+  const topics = additionalLessonTitles[levelId] || [];
+  if (!topics.length) return lessons;
+
+  const existingTitles = new Set(lessons.map((lesson) => lesson.title));
+  let nextId = lessons.length ? Math.max(...lessons.map((lesson) => Number(lesson.id) || 0)) + 1 : levelId * 100 + 1;
+
+  topics.forEach((topic) => {
+    if (existingTitles.has(topic)) return;
+
+    lessons.push({
+      id: nextId++,
+      title: topic,
+      content: `${topic} provides practical guidance on ${levelFocus[levelId]} in Nepal's context. This lesson connects legal principles, local institutions, and daily citizen behavior to improve outcomes.\n\nLearners analyze a realistic scenario, identify responsibilities, and propose a measurable action plan that can be applied in school, home, or community settings.`,
+      keyPoints: [
+        `Core concept: ${topic}`,
+        'Understand relevant local responsibilities',
+        'Apply the concept through a practical case',
+        'Track outcomes and improve the plan',
+      ],
+      articles: null,
+      helpline: levelId === 3 ? 'Traffic Police: 103; Ambulance: 102' : null,
+    });
+  });
+
+  return lessons;
+}
+
+Object.keys(levelsExpanded).forEach((key) => {
+  const levelId = Number(key);
+  levelsExpanded[levelId] = appendAdditionalLessons(levelsExpanded[levelId], levelId);
+});
+
 // Attach expanded lessons on the primary export to keep a single file source
 levels.expanded = levelsExpanded;
 
