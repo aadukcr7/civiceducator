@@ -58,8 +58,8 @@ class Progress {
     return new Promise((resolve, reject) => {
       const sql = `
         SELECT 
-          COUNT(CASE WHEN completed = 1 THEN 1 END) as completed_count,
-          AVG(CASE WHEN completed = 1 THEN score END) as avg_score
+          COUNT(CASE WHEN score IS NOT NULL THEN 1 END) as completed_count,
+          AVG(score) as avg_score
         FROM progress 
         WHERE user_id = ?
       `;

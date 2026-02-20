@@ -134,10 +134,10 @@ class User {
     return new Promise((resolve, reject) => {
       const sql = `
         SELECT 
-          COUNT(*) as total_completed,
+          COUNT(CASE WHEN score IS NOT NULL THEN 1 END) as total_completed,
           AVG(score) as average_score
         FROM progress 
-        WHERE user_id = ? AND completed = 1
+        WHERE user_id = ?
       `;
       db.get(sql, [userId], (err, row) => {
         if (err) {
