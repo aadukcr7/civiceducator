@@ -9,8 +9,7 @@ const QUIZ_LEAD_SIZE = 3;
 const QUIZ_MAX_GENERATION_ATTEMPTS = 10;
 const QUIZ_RECENT_LEADS_LIMIT = 5;
 const QUIZ_RECENT_ATTEMPTS_FOR_ADAPTIVE = 3;
-const DEFAULT_ADAPTIVE_QUIZ_COUNT = 12;
-const MIN_ADAPTIVE_QUIZ_COUNT = 5;
+const QUIZ_QUESTIONS_PER_ATTEMPT = 15;
 const FAST_SECONDS_PER_QUESTION = 22;
 const SLOW_SECONDS_PER_QUESTION = 40;
 
@@ -55,13 +54,57 @@ function getQuestionDifficultyBuckets(baseQuiz) {
 }
 
 function getAdaptiveQuestionTarget(totalQuestions) {
-  if (totalQuestions <= MIN_ADAPTIVE_QUIZ_COUNT) {
+  if (totalQuestions <= QUIZ_QUESTIONS_PER_ATTEMPT) {
     return totalQuestions;
   }
 
-  const envValue = Number(process.env.ADAPTIVE_QUIZ_QUESTION_COUNT);
-  const configured = Number.isFinite(envValue) && envValue > 0 ? envValue : DEFAULT_ADAPTIVE_QUIZ_COUNT;
-  return Math.max(MIN_ADAPTIVE_QUIZ_COUNT, Math.min(totalQuestions, configured));
+  return QUIZ_QUESTIONS_PER_ATTEMPT;
+}
+
+function buildLessonDerivedQuizQuestions(level) {
+  const lessons = Array.isArray(level?.lessons) ? level.lessons : [];
+  if (lessons.length < 4) {
+    return [];
+  }
+
+  return lessons.map((lesson) => {
+    const correctTitle = lesson.title;
+    const distractors = shuffleArray(
+      lessons
+        .filter((item) => item.id !== lesson.id)
+        .map((item) => item.title)
+    ).slice(0, 3);
+
+    const options = shuffleArray([correctTitle, ...distractors]);
+    const clue = Array.isArray(lesson.keyPoints) && lesson.keyPoints.length > 0
+      ? lesson.keyPoints[0]
+      : 'core topic of this lesson';
+
+    return {
+      id: Number(`9${lesson.id}`),
+      question: `Which lesson topic best matches this focus: "${clue}"?`,
+      options,
+      correct: options.indexOf(correctTitle),
+    };
+  });
+}
+
+function buildQuizPoolForLevel(level) {
+  const baseQuiz = Array.isArray(level?.quiz) ? level.quiz : [];
+  const lessonDerived = buildLessonDerivedQuizQuestions(level);
+  const source = lessonDerived.length >= QUIZ_QUESTIONS_PER_ATTEMPT
+    ? lessonDerived
+    : [...lessonDerived, ...baseQuiz];
+  const seenIds = new Set();
+
+  return source.filter((question) => {
+    const id = Number(question?.id);
+    if (!Number.isFinite(id) || seenIds.has(id)) {
+      return false;
+    }
+    seenIds.add(id);
+    return Array.isArray(question.options) && question.options.length >= 2;
+  });
 }
 
 function buildAdaptiveQuestionSet(baseQuiz, targetDifficulty) {
@@ -318,7 +361,8 @@ function buildQuizForAttempt(req, levelId, baseQuiz, targetDifficulty) {
   const previousOrder = Array.isArray(lastOrderByLevel[levelKey]) ? lastOrderByLevel[levelKey] : [];
   const previousOrderSignature = previousOrder.join(',');
 
-  let candidate = shuffleArray(buildAdaptiveQuestionSet(baseQuiz, targetDifficulty));
+  const targetCount = getAdaptiveQuestionTarget(baseQuiz.length);
+  let candidate = shuffleArray(baseQuiz).slice(0, targetCount);
 
   for (let attempt = 0; attempt < QUIZ_MAX_GENERATION_ATTEMPTS; attempt++) {
     const leadSignature = getLeadSignature(candidate);
@@ -330,7 +374,7 @@ function buildQuizForAttempt(req, levelId, baseQuiz, targetDifficulty) {
       break;
     }
 
-    candidate = shuffleArray(buildAdaptiveQuestionSet(baseQuiz, targetDifficulty));
+    candidate = shuffleArray(baseQuiz).slice(0, targetCount);
   }
 
   return candidate;
@@ -436,16 +480,21 @@ router.get('/:levelId', async (req, res) => {
       QUIZ_RECENT_ATTEMPTS_FOR_ADAPTIVE
     );
     const adaptiveDifficulty = getRecommendedDifficultyFromAttempts(recentAttempts);
-    const randomizedQuiz = buildQuizForAttempt(req, levelId, level.quiz || [], adaptiveDifficulty);
+    const quizPool = buildQuizPoolForLevel(level);
+    const randomizedQuiz = buildQuizForAttempt(req, levelId, quizPool, adaptiveDifficulty);
     const levelKey = String(levelId);
 
     if (!req.session.quizAttemptOrder) {
       req.session.quizAttemptOrder = {};
     }
+    if (!req.session.quizAttemptQuestions) {
+      req.session.quizAttemptQuestions = {};
+    }
     if (!req.session.quizAttemptMeta) {
       req.session.quizAttemptMeta = {};
     }
     req.session.quizAttemptOrder[levelKey] = randomizedQuiz.map((question) => question.id);
+    req.session.quizAttemptQuestions[levelKey] = randomizedQuiz;
     req.session.quizAttemptMeta[levelKey] = {
       startedAt: Date.now(),
       difficulty: adaptiveDifficulty,
@@ -477,23 +526,31 @@ router.post('/:levelId/quiz', async (req, res) => {
 
     const levels = await levelsStore.getLevels();
     const level = levels.find((l) => l.id === levelId);
-    if (!level || !Array.isArray(level.quiz) || level.quiz.length === 0) {
+    if (!level) {
       return res.status(404).render('404', { error: 'Level or quiz not found' });
     }
 
     const attemptOrderByLevel = req.session.quizAttemptOrder || {};
+    const attemptQuestionsByLevel = req.session.quizAttemptQuestions || {};
     const attemptMetaByLevel = req.session.quizAttemptMeta || {};
     const attemptOrder = Array.isArray(attemptOrderByLevel[levelKey])
       ? attemptOrderByLevel[levelKey]
       : [];
-    const questionById = (level.quiz || []).reduce((acc, question) => {
+    const quizPool = Array.isArray(attemptQuestionsByLevel[levelKey])
+      ? attemptQuestionsByLevel[levelKey]
+      : buildQuizPoolForLevel(level);
+    if (!Array.isArray(quizPool) || quizPool.length === 0) {
+      return res.status(404).render('404', { error: 'Level or quiz not found' });
+    }
+
+    const questionById = quizPool.reduce((acc, question) => {
       acc[question.id] = question;
       return acc;
     }, {});
     const presentedQuestions = attemptOrder
       .map((questionId) => questionById[questionId])
       .filter((question) => !!question);
-    const quizQuestions = presentedQuestions.length > 0 ? presentedQuestions : level.quiz;
+    const quizQuestions = presentedQuestions.length > 0 ? presentedQuestions : quizPool;
 
     // Calculate score
     let correctCount = 0;
@@ -534,7 +591,7 @@ router.post('/:levelId/quiz', async (req, res) => {
 
     const lastOrderByLevel = req.session.quizLastOrder || {};
     const recentLeadsByLevel = req.session.quizRecentLeads || {};
-    const effectiveOrder = attemptOrder.length > 0 ? attemptOrder : level.quiz.map((question) => question.id);
+    const effectiveOrder = attemptOrder.length > 0 ? attemptOrder : quizPool.map((question) => question.id);
     const leadSignature = effectiveOrder
       .slice(0, Math.min(QUIZ_LEAD_SIZE, effectiveOrder.length))
       .join(',');
@@ -548,8 +605,10 @@ router.post('/:levelId/quiz', async (req, res) => {
     req.session.quizLastOrder = lastOrderByLevel;
     req.session.quizRecentLeads = recentLeadsByLevel;
     req.session.quizAttemptOrder = attemptOrderByLevel;
+    req.session.quizAttemptQuestions = attemptQuestionsByLevel;
     req.session.quizAttemptMeta = attemptMetaByLevel;
     delete req.session.quizAttemptOrder[levelKey];
+    delete req.session.quizAttemptQuestions[levelKey];
     delete req.session.quizAttemptMeta[levelKey];
 
     res.render('result', {
