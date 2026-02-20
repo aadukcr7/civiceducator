@@ -36,14 +36,28 @@
 
           <div class="mb-3">
             <label for="password" class="form-label">Password</label>
-            <input type="password" class="form-control" id="password" name="password" 
-              placeholder="Enter a strong password (8+ chars, upper/lowercase, number, special char)" required>
+            <div class="password-field-wrapper">
+              <div class="input-group">
+                <input type="password" class="form-control" id="password" name="password" 
+                  placeholder="Enter a strong password (8+ chars, upper/lowercase, number, special char)" required>
+                <button type="button" class="btn btn-outline-secondary password-toggle" data-toggle-password="password" aria-label="Show password" aria-pressed="false">
+                  <i class="bi bi-eye"></i>
+                </button>
+              </div>
+            </div>
           </div>
 
           <div class="mb-4">
             <label for="confirmPassword" class="form-label">Confirm Password</label>
-            <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" 
-              placeholder="Confirm your password" required>
+            <div class="password-field-wrapper">
+              <div class="input-group">
+                <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" 
+                  placeholder="Confirm your password" required>
+                <button type="button" class="btn btn-outline-secondary password-toggle" data-toggle-password="confirmPassword" aria-label="Show password" aria-pressed="false">
+                  <i class="bi bi-eye"></i>
+                </button>
+              </div>
+            </div>
           </div>
 
           <button type="submit" class="btn btn-primary w-100 mb-3">Register</button>
