@@ -124,6 +124,45 @@ class User {
     return Math.random().toString(36).slice(-10) + 'A1!';
   }
 
+  // Delete user account and related records
+  static async deleteAccount(userId) {
+    return new Promise((resolve, reject) => {
+      db.serialize(() => {
+        db.run('BEGIN TRANSACTION');
+
+        db.run('DELETE FROM quiz_attempts WHERE user_id = ?', [userId], (attemptsErr) => {
+          if (attemptsErr) {
+            return db.run('ROLLBACK', () => reject(attemptsErr));
+          }
+
+          db.run('DELETE FROM progress WHERE user_id = ?', [userId], (progressErr) => {
+            if (progressErr) {
+              return db.run('ROLLBACK', () => reject(progressErr));
+            }
+
+            db.run('DELETE FROM users WHERE id = ?', [userId], function (userErr) {
+              if (userErr) {
+                return db.run('ROLLBACK', () => reject(userErr));
+              }
+
+              if (this.changes === 0) {
+                return db.run('ROLLBACK', () => reject(new Error('User not found')));
+              }
+
+              db.run('COMMIT', (commitErr) => {
+                if (commitErr) {
+                  return db.run('ROLLBACK', () => reject(commitErr));
+                }
+
+                resolve({ id: userId, deleted: true });
+              });
+            });
+          });
+        });
+      });
+    });
+  }
+
   // Verify password
   static async verifyPassword(plainPassword, hashedPassword) {
     return bcrypt.compare(plainPassword, hashedPassword);
