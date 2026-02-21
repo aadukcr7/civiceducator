@@ -13,6 +13,7 @@ require('./config/database');
 const authRoutes = require('./routes/auth');
 const levelsRoutes = require('./routes/levels');
 const adminRoutes = require('./routes/admin');
+const chatbotRoutes = require('./routes/chatbot');
 const { getProfileViewModel } = require('./services/profileService');
 const { isAuthenticated, isNotAuthenticated } = require('./middleware/auth');
 const { createConcurrentUserLimiter } = require('./middleware/concurrentUsers');
@@ -131,6 +132,7 @@ app.use('/auth', authRoutes);
 app.use('/admin', adminRoutes);
 // Apply auth middleware within the levels route handler for data endpoints
 app.use('/levels', levelsRoutes);
+app.use('/chatbot', chatbotRoutes);
 
 // Home page
 app.get('/', (req, res) => {
