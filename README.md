@@ -63,6 +63,9 @@ This application delivers structured civic education through lessons and quizzes
 - Level-based lessons and quizzes
 - Adaptive quiz behavior from recent performance
 - Dashboard insights for strengths and weak areas
+- Public guest-only About page with full platform walkthrough
+- Authenticated Civic Assistant chatbot with floating access across pages
+- Grounded chatbot answers with source citations, confidence scoring, and fallback behavior
 - Admin tools for content and learner management
 
 ## Who This Project Helps
@@ -130,15 +133,29 @@ Each attempt contributes to a learner profile that can guide future study and re
 - Quiz questions can be managed without direct code edits
 - User access and account actions are available to admins
 
+### 5) Civic Assistant (Grounded Chat)
+
+- Signed-in users can ask questions from any lesson and any level
+- The assistant retrieves evidence from existing lesson content only
+- Responses include citations to level/lesson sources
+- Minimum-confidence threshold is enforced before answering
+- If confidence is low, assistant returns a safe "I don't know" fallback instead of guessing
+
+### 6) Public About Walkthrough
+
+- Signed-out users get a dedicated About page explaining platform purpose and value
+- Includes end-to-end walkthrough of how learning, quizzes, and progress work
+
 ## User Journey (End-to-End)
 
 1. User registers or logs in.
 2. User opens available civic levels.
 3. User studies lesson content.
 4. User attempts level quiz.
-5. System calculates score, records attempt, and stores progress.
-6. Dashboard/profile reflects strengths, weak areas, and next focus.
-7. Admin improves content over time based on learner behavior.
+5. User can ask the Civic Assistant for lesson-grounded clarification and citations.
+6. System calculates score, records attempt, and stores progress.
+7. Dashboard/profile reflects strengths, weak areas, and next focus.
+8. Admin improves content over time based on learner behavior.
 
 ## Educational and Social Impact
 
@@ -180,9 +197,9 @@ These are key interfaces of the live system:
 
 ### Internal Modules
 
-- `routes/` handles auth, levels, and admin endpoints
+- `routes/` handles auth, levels, admin, and chatbot endpoints
 - `controllers/` manages request-level orchestration
-- `services/` contains core business logic (quiz, analytics, profile, admin)
+- `services/` contains core business logic (quiz, analytics, profile, admin, chatbot retrieval)
 - `models/` encapsulates user and progress persistence logic
 - `middleware/` enforces auth and concurrent-session control
 - `validators/` provides server-side input validation
@@ -193,6 +210,7 @@ These are key interfaces of the live system:
 - **Progress data:** level completion and score history
 - **Attempt data:** quiz performance and time-based behavior
 - **Session data:** login continuity and access state
+- **Chat evidence data:** lesson-level retrieval matches and citations used in chatbot responses
 
 ## Current Scope and Limitations
 
@@ -218,8 +236,8 @@ civiceducator/
   middleware/       # Auth and concurrent-user controls
   models/           # User and progress database operations
   public/           # Static CSS/JS assets
-  routes/           # Route definitions (auth, levels, admin)
-  services/         # Business logic (analytics, quiz, profile)
+  routes/           # Route definitions (auth, levels, admin, chatbot)
+  services/         # Business logic (analytics, quiz, profile, chatbot)
   validators/       # Input validation rules
   views/            # EJS templates (learner + admin)
   server.js         # Application bootstrap
