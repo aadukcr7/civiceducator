@@ -21,8 +21,8 @@
           </tr>
         </thead>
         <tbody>
-          <% if (questions && questions.length > 0) { %>
-            <% questions.forEach(question => { %>
+          <% if (level.quiz && level.quiz.length > 0) { %>
+            <% level.quiz.forEach(question => { %>
               <tr>
                 <td><%= question.id %></td>
                 <td><%= question.question %></td>
@@ -32,7 +32,6 @@
                     <a class="btn btn-sm btn-outline-primary" href="/admin/levels/<%= level.id %>/quiz/<%= question.id %>/edit">Edit</a>
                     <form method="POST" action="/admin/levels/<%= level.id %>/quiz/<%= question.id %>/delete" onsubmit="return confirm('Delete this question?');">
                       <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                      <input type="hidden" name="page" value="<%= pagination?.page || 1 %>">
                       <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
                     </form>
                   </div>
@@ -47,22 +46,6 @@
         </tbody>
       </table>
     </div>
-
-    <% if (pagination && pagination.totalPages > 1) { %>
-      <nav aria-label="Quiz pagination" class="mt-3">
-        <ul class="pagination mb-0">
-          <li class="page-item <%= pagination.hasPrev ? '' : 'disabled' %>">
-            <a class="page-link" href="/admin/levels/<%= level.id %>/quiz?page=<%= pagination.page - 1 %>">Previous</a>
-          </li>
-          <li class="page-item disabled">
-            <span class="page-link">Page <%= pagination.page %> of <%= pagination.totalPages %></span>
-          </li>
-          <li class="page-item <%= pagination.hasNext ? '' : 'disabled' %>">
-            <a class="page-link" href="/admin/levels/<%= level.id %>/quiz?page=<%= pagination.page + 1 %>">Next</a>
-          </li>
-        </ul>
-      </nav>
-    <% } %>
   </div>
 </main>
 

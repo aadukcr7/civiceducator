@@ -75,23 +75,6 @@ class User {
     });
   }
 
-  static async listPage(limit = 20, offset = 0) {
-    return new Promise((resolve, reject) => {
-      const sql = `
-        SELECT id, username, email, is_disabled, created_at
-        FROM users
-        ORDER BY created_at DESC
-        LIMIT ? OFFSET ?
-      `;
-      db.all(sql, [limit, offset], (err, rows) => {
-        if (err) {
-          return reject(err);
-        }
-        resolve(rows || []);
-      });
-    });
-  }
-
   // Count all users
   static async countAll() {
     return new Promise((resolve, reject) => {

@@ -20,8 +20,8 @@
           </tr>
         </thead>
         <tbody>
-          <% if (lessons && lessons.length > 0) { %>
-            <% lessons.forEach(lesson => { %>
+          <% if (level.lessons && level.lessons.length > 0) { %>
+            <% level.lessons.forEach(lesson => { %>
               <tr>
                 <td><%= lesson.id %></td>
                 <td><%= lesson.title %></td>
@@ -30,7 +30,6 @@
                     <a class="btn btn-sm btn-outline-primary" href="/admin/levels/<%= level.id %>/lessons/<%= lesson.id %>/edit">Edit</a>
                     <form method="POST" action="/admin/levels/<%= level.id %>/lessons/<%= lesson.id %>/delete" onsubmit="return confirm('Delete this lesson?');">
                       <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                      <input type="hidden" name="page" value="<%= pagination?.page || 1 %>">
                       <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
                     </form>
                   </div>
@@ -45,22 +44,6 @@
         </tbody>
       </table>
     </div>
-
-    <% if (pagination && pagination.totalPages > 1) { %>
-      <nav aria-label="Lessons pagination" class="mt-3">
-        <ul class="pagination mb-0">
-          <li class="page-item <%= pagination.hasPrev ? '' : 'disabled' %>">
-            <a class="page-link" href="/admin/levels/<%= level.id %>/lessons?page=<%= pagination.page - 1 %>">Previous</a>
-          </li>
-          <li class="page-item disabled">
-            <span class="page-link">Page <%= pagination.page %> of <%= pagination.totalPages %></span>
-          </li>
-          <li class="page-item <%= pagination.hasNext ? '' : 'disabled' %>">
-            <a class="page-link" href="/admin/levels/<%= level.id %>/lessons?page=<%= pagination.page + 1 %>">Next</a>
-          </li>
-        </ul>
-      </nav>
-    <% } %>
   </div>
 </main>
 
