@@ -2,13 +2,32 @@ const levelsStore = require('../data/levelsStore');
 const Progress = require('../models/Progress');
 const User = require('../models/User');
 
+const PROFILE_ATTEMPTS_PAGE_SIZE = 15;
+
+function parsePage(value) {
+  const parsed = Number.parseInt(value, 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 1;
+}
+
 async function getProfileViewModel(userId, query = {}) {
-  const [user, levels, progressList, attempts] = await Promise.all([
+  const currentPage = parsePage(query.attemptPage);
+  const [user, levels, progressList, totalAttemptsCount, attemptsSummary, attemptStatsByLevel] = await Promise.all([
     User.findById(userId),
     levelsStore.getLevels(),
     Progress.getAllProgress(userId),
-    Progress.getRecentQuizAttempts(userId, 200),
+    Progress.countQuizAttempts(userId),
+    Progress.getQuizAttemptSummary(userId),
+    Progress.getAttemptStatsByLevel(userId),
   ]);
+
+  const totalPages = Math.max(1, Math.ceil(totalAttemptsCount / PROFILE_ATTEMPTS_PAGE_SIZE));
+  const page = Math.min(currentPage, totalPages);
+  const attemptsOffset = (page - 1) * PROFILE_ATTEMPTS_PAGE_SIZE;
+  const attempts = await Progress.getQuizAttemptsPage(
+    userId,
+    PROFILE_ATTEMPTS_PAGE_SIZE,
+    attemptsOffset
+  );
 
   const levelById = levels.reduce((acc, level) => {
     acc[level.id] = level;
@@ -22,16 +41,12 @@ async function getProfileViewModel(userId, query = {}) {
       studiedLevelIds.add(Number(item.level_id));
     }
   });
-  attempts.forEach((attempt) => {
-    studiedLevelIds.add(Number(attempt.level_id));
-  });
-
-  const attemptsByLevel = attempts.reduce((acc, attempt) => {
-    const key = Number(attempt.level_id);
-    if (!acc[key]) {
-      acc[key] = [];
-    }
-    acc[key].push(attempt);
+  const attemptStatsByLevelId = attemptStatsByLevel.reduce((acc, item) => {
+    acc[Number(item.level_id)] = {
+      attemptsCount: Number(item.attempts_count) || 0,
+      bestScore: item.best_score !== null ? Number(item.best_score) : null,
+    };
+    studiedLevelIds.add(Number(item.level_id));
     return acc;
   }, {});
 
@@ -42,42 +57,24 @@ async function getProfileViewModel(userId, query = {}) {
         return null;
       }
 
-      const levelAttempts = attemptsByLevel[levelId] || [];
-      const bestScore = levelAttempts.length
-        ? Math.max(...levelAttempts.map((item) => Number(item.score) || 0))
-        : null;
+      const levelAttemptStats = attemptStatsByLevelId[levelId] || {
+        attemptsCount: 0,
+        bestScore: null,
+      };
 
       return {
         id: level.id,
         title: level.title,
         icon: level.icon,
         lessonsCount: Array.isArray(level.lessons) ? level.lessons.length : 0,
-        attemptsCount: levelAttempts.length,
-        bestScore,
+        attemptsCount: levelAttemptStats.attemptsCount,
+        bestScore: levelAttemptStats.bestScore,
       };
     })
     .filter(Boolean)
     .sort((a, b) => b.attemptsCount - a.attemptsCount || a.id - b.id);
 
   const lessonsStudiedCount = studiedLevels.reduce((sum, level) => sum + level.lessonsCount, 0);
-  const totalAttempts = attempts.length;
-  const passedAttempts = attempts.filter((item) => (Number(item.score) || 0) >= 70).length;
-  const averageScore = totalAttempts
-    ? Math.round(
-      attempts.reduce((sum, item) => sum + (Number(item.score) || 0), 0) / totalAttempts
-    )
-    : 0;
-  const bestScoreOverall = totalAttempts
-    ? Math.max(...attempts.map((item) => Number(item.score) || 0))
-    : 0;
-  const totalQuestionsAttempted = attempts.reduce(
-    (sum, item) => sum + (Number(item.total_questions) || 0),
-    0
-  );
-  const totalCorrectAnswers = attempts.reduce(
-    (sum, item) => sum + (Number(item.correct_count) || 0),
-    0
-  );
 
   const quizAttempts = attempts.map((attempt) => {
     const level = levelById[Number(attempt.level_id)];
@@ -98,15 +95,23 @@ async function getProfileViewModel(userId, query = {}) {
       levelsStudiedCount: studiedLevels.length,
       lessonsStudiedCount,
       levelsCompletedCount: completedLevelsCount,
-      totalAttempts,
-      passedAttempts,
-      averageScore,
-      bestScoreOverall,
-      totalQuestionsAttempted,
-      totalCorrectAnswers,
+      totalAttempts: attemptsSummary.totalAttempts,
+      passedAttempts: attemptsSummary.passedAttempts,
+      averageScore: attemptsSummary.averageScore,
+      bestScoreOverall: attemptsSummary.bestScoreOverall,
+      totalQuestionsAttempted: attemptsSummary.totalQuestionsAttempted,
+      totalCorrectAnswers: attemptsSummary.totalCorrectAnswers,
     },
     studiedLevels,
     quizAttempts,
+    attemptsPagination: {
+      page,
+      pageSize: PROFILE_ATTEMPTS_PAGE_SIZE,
+      totalItems: totalAttemptsCount,
+      totalPages,
+      hasPrev: page > 1,
+      hasNext: page < totalPages,
+    },
   };
 }
 

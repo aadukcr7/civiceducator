@@ -202,6 +202,89 @@ class Progress {
     });
   }
 
+  static async countQuizAttempts(userId) {
+    return new Promise((resolve, reject) => {
+      const sql = 'SELECT COUNT(*) as count FROM quiz_attempts WHERE user_id = ?';
+      db.get(sql, [userId], (err, row) => {
+        if (err) {
+          return reject(err);
+        }
+        resolve(row ? row.count : 0);
+      });
+    });
+  }
+
+  static async getQuizAttemptsPage(userId, limit = 20, offset = 0) {
+    return new Promise((resolve, reject) => {
+      const sql = `
+        SELECT *
+        FROM quiz_attempts
+        WHERE user_id = ?
+        ORDER BY created_at DESC, id DESC
+        LIMIT ? OFFSET ?
+      `;
+
+      db.all(sql, [userId, limit, offset], (err, rows) => {
+        if (err) {
+          return reject(err);
+        }
+        resolve(rows || []);
+      });
+    });
+  }
+
+  static async getQuizAttemptSummary(userId) {
+    return new Promise((resolve, reject) => {
+      const sql = `
+        SELECT
+          COUNT(*) as total_attempts,
+          SUM(CASE WHEN score >= 70 THEN 1 ELSE 0 END) as passed_attempts,
+          AVG(score) as average_score,
+          MAX(score) as best_score,
+          SUM(COALESCE(total_questions, 0)) as total_questions,
+          SUM(COALESCE(correct_count, 0)) as total_correct
+        FROM quiz_attempts
+        WHERE user_id = ?
+      `;
+
+      db.get(sql, [userId], (err, row) => {
+        if (err) {
+          return reject(err);
+        }
+
+        resolve({
+          totalAttempts: row?.total_attempts || 0,
+          passedAttempts: row?.passed_attempts || 0,
+          averageScore: row?.average_score ? Math.round(row.average_score) : 0,
+          bestScoreOverall: row?.best_score || 0,
+          totalQuestionsAttempted: row?.total_questions || 0,
+          totalCorrectAnswers: row?.total_correct || 0,
+        });
+      });
+    });
+  }
+
+  static async getAttemptStatsByLevel(userId) {
+    return new Promise((resolve, reject) => {
+      const sql = `
+        SELECT
+          level_id,
+          COUNT(*) as attempts_count,
+          MAX(score) as best_score
+        FROM quiz_attempts
+        WHERE user_id = ?
+        GROUP BY level_id
+      `;
+
+      db.all(sql, [userId], (err, rows) => {
+        if (err) {
+          return reject(err);
+        }
+        resolve(rows || []);
+      });
+    });
+  }
+
   // Get recent attempts for a specific level
   static async getRecentQuizAttemptsForLevel(userId, levelId, limit = 3) {
     return new Promise((resolve, reject) => {
