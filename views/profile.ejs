@@ -1,0 +1,180 @@
+<%- include('partials/header', { title: 'Profile' }) %>
+
+<main class="flex-grow-1">
+  <div class="container py-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+      <h1 class="mb-0">Your Profile</h1>
+      <a href="/dashboard" class="btn btn-outline-secondary">Back to Dashboard</a>
+    </div>
+
+    <div class="card mb-4">
+      <div class="card-body">
+        <div class="row g-3 align-items-center">
+          <div class="col-md-8">
+            <h4 class="mb-1"><%= user?.username || 'Learner' %></h4>
+            <p class="mb-1 text-muted"><%= user?.email || '' %></p>
+            <small class="text-muted">Joined: <%= user?.created_at ? new Date(user.created_at).toLocaleDateString() : '-' %></small>
+          </div>
+          <div class="col-md-4 text-md-end">
+            <span class="badge bg-primary">Total Activities: <%= summary.totalActivities %></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-3 mb-5">
+      <div class="col-md-3 col-6">
+        <div class="card h-100">
+          <div class="card-body">
+            <h6 class="text-muted mb-1">Levels Studied</h6>
+            <h3 class="mb-0"><%= summary.levelsStudiedCount %></h3>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3 col-6">
+        <div class="card h-100">
+          <div class="card-body">
+            <h6 class="text-muted mb-1">Lessons Studied</h6>
+            <h3 class="mb-0"><%= summary.lessonsStudiedCount %></h3>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3 col-6">
+        <div class="card h-100">
+          <div class="card-body">
+            <h6 class="text-muted mb-1">Levels Completed</h6>
+            <h3 class="mb-0"><%= summary.levelsCompletedCount %></h3>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-3 col-6">
+        <div class="card h-100">
+          <div class="card-body">
+            <h6 class="text-muted mb-1">Quiz Attempts</h6>
+            <h3 class="mb-0"><%= summary.totalAttempts %></h3>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-4 mb-5">
+      <div class="col-lg-6">
+        <div class="card h-100">
+          <div class="card-body">
+            <h4 class="card-title">What You Studied</h4>
+            <% if (studiedLevels && studiedLevels.length > 0) { %>
+              <div class="table-responsive">
+                <table class="table align-middle">
+                  <thead>
+                    <tr>
+                      <th>Level</th>
+                      <th>Lessons</th>
+                      <th>Attempts</th>
+                      <th>Best Score</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% studiedLevels.forEach((item) => { %>
+                      <tr>
+                        <td>
+                          <a href="/levels/<%= item.id %>"><%= item.icon %> <%= item.title %></a>
+                        </td>
+                        <td><%= item.lessonsCount %></td>
+                        <td><%= item.attemptsCount %></td>
+                        <td><%= item.bestScore !== null ? item.bestScore + '%' : '--' %></td>
+                      </tr>
+                    <% }); %>
+                  </tbody>
+                </table>
+              </div>
+            <% } else { %>
+              <p class="text-muted mb-0">You have not started any levels yet.</p>
+            <% } %>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-6">
+        <div class="card h-100">
+          <div class="card-body">
+            <h4 class="card-title">Quiz Performance Summary</h4>
+            <div class="row g-3">
+              <div class="col-6">
+                <div class="border rounded p-3 h-100">
+                  <div class="text-muted small">Passed Attempts</div>
+                  <div class="h4 mb-0"><%= summary.passedAttempts %></div>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="border rounded p-3 h-100">
+                  <div class="text-muted small">Average Score</div>
+                  <div class="h4 mb-0"><%= summary.averageScore ? summary.averageScore + '%' : '--' %></div>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="border rounded p-3 h-100">
+                  <div class="text-muted small">Best Score</div>
+                  <div class="h4 mb-0"><%= summary.bestScoreOverall ? summary.bestScoreOverall + '%' : '--' %></div>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="border rounded p-3 h-100">
+                  <div class="text-muted small">Questions Attempted</div>
+                  <div class="h4 mb-0"><%= summary.totalQuestionsAttempted %></div>
+                </div>
+              </div>
+              <div class="col-12">
+                <div class="border rounded p-3 h-100">
+                  <div class="text-muted small">Correct Answers</div>
+                  <div class="h4 mb-0"><%= summary.totalCorrectAnswers %></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-body">
+        <h4 class="card-title mb-3">Quiz Attempts</h4>
+        <% if (quizAttempts && quizAttempts.length > 0) { %>
+          <div class="table-responsive">
+            <table class="table align-middle">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Level</th>
+                  <th>Score</th>
+                  <th>Correct</th>
+                  <th>Difficulty</th>
+                  <th>Duration</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% quizAttempts.forEach((attempt) => { %>
+                  <tr>
+                    <td><%= attempt.created_at ? new Date(attempt.created_at).toLocaleString() : '-' %></td>
+                    <td><%= attempt.levelTitle %></td>
+                    <td>
+                      <span class="badge <%= Number(attempt.score) >= 70 ? 'bg-success' : 'bg-warning text-dark' %>">
+                        <%= attempt.score %>%
+                      </span>
+                    </td>
+                    <td><%= attempt.correct_count %>/<%= attempt.total_questions %></td>
+                    <td class="text-capitalize"><%= attempt.difficulty || 'medium' %></td>
+                    <td><%= attempt.duration_seconds %>s</td>
+                  </tr>
+                <% }); %>
+              </tbody>
+            </table>
+          </div>
+        <% } else { %>
+          <p class="text-muted mb-0">No quiz attempts yet. Start a level and take a quiz to populate this section.</p>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</main>
+
+<%- include('partials/footer') %>
