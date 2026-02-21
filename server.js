@@ -225,6 +225,9 @@ app.get('/profile', isAuthenticated, async (req, res) => {
 
     res.render('profile', {
       user,
+      query: {
+        deleteError: req.query.deleteError || null,
+      },
       summary: {
         totalActivities,
         levelsStudiedCount: studiedLevels.length,

@@ -203,4 +203,63 @@ router.get('/logout', isAuthenticated, (req, res) => {
   });
 });
 
+// Delete account (authenticated user only)
+router.post(
+  '/delete-account',
+  isAuthenticated,
+  [
+    emailValidation,
+    body('password').notEmpty().withMessage('Password is required'),
+  ],
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        const firstError = errors.array()[0]?.msg || 'Invalid input';
+        return res.redirect(`/profile?deleteError=${encodeURIComponent(firstError)}`);
+      }
+
+      const userId = req.session.userId;
+      const inputEmail = String(req.body.email || '').trim().toLowerCase();
+      const inputPassword = String(req.body.password || '');
+
+      const currentUser = await User.findById(userId);
+      if (!currentUser) {
+        return res.redirect('/auth/login');
+      }
+
+      if (currentUser.email.toLowerCase() !== inputEmail) {
+        return res.redirect('/profile?deleteError=Email%20does%20not%20match%20your%20account');
+      }
+
+      const userWithPassword = await User.findByEmail(currentUser.email);
+      if (!userWithPassword) {
+        return res.redirect('/profile?deleteError=Unable%20to%20validate%20account');
+      }
+
+      const isPasswordValid = await User.verifyPassword(inputPassword, userWithPassword.password);
+      if (!isPasswordValid) {
+        return res.redirect('/profile?deleteError=Incorrect%20password');
+      }
+
+      await User.deleteAccount(userId);
+
+      const limiter = req.app.locals.concurrentUserLimiter;
+      const currentSessionId = req.sessionID;
+      req.session.destroy((destroyErr) => {
+        if (destroyErr) {
+          return res.redirect('/auth/login');
+        }
+        if (limiter) {
+          limiter.unregisterSession(currentSessionId);
+        }
+        res.redirect('/?deleted=1');
+      });
+    } catch (err) {
+      console.error('Delete account error:', err);
+      res.redirect('/profile?deleteError=Could%20not%20delete%20account');
+    }
+  }
+);
+
 module.exports = router;

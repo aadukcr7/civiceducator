@@ -7,6 +7,10 @@
       <a href="/dashboard" class="btn btn-outline-secondary">Back to Dashboard</a>
     </div>
 
+    <% if (query && query.deleteError) { %>
+      <div class="alert alert-danger"><%= query.deleteError %></div>
+    <% } %>
+
     <div class="card mb-4">
       <div class="card-body">
         <div class="row g-3 align-items-center">
@@ -172,6 +176,50 @@
         <% } else { %>
           <p class="text-muted mb-0">No quiz attempts yet. Start a level and take a quiz to populate this section.</p>
         <% } %>
+      </div>
+    </div>
+
+    <div class="card border-danger mt-4">
+      <div class="card-body">
+        <h4 class="card-title text-danger mb-3">Delete Account</h4>
+        <p class="text-muted">This permanently removes your account, progress, and quiz attempt history.</p>
+
+        <form method="POST" action="/auth/delete-account" class="row g-3">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <div class="col-md-6">
+            <label for="deleteEmail" class="form-label">Confirm Email</label>
+            <input
+              type="email"
+              class="form-control"
+              id="deleteEmail"
+              name="email"
+              placeholder="Enter your account email"
+              required
+              autocomplete="email"
+            >
+          </div>
+          <div class="col-md-6">
+            <label for="deletePassword" class="form-label">Confirm Password</label>
+            <input
+              type="password"
+              class="form-control"
+              id="deletePassword"
+              name="password"
+              placeholder="Enter your password"
+              required
+              autocomplete="current-password"
+            >
+          </div>
+          <div class="col-12">
+            <button
+              type="submit"
+              class="btn btn-danger"
+              onclick="return confirm('Are you sure you want to permanently delete your account?')"
+            >
+              Delete My Account
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   </div>
