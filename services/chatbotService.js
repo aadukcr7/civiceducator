@@ -168,14 +168,10 @@ function buildResponse({ topMatches, topScore, questionTokens }) {
     return buildLowConfidenceResponse();
   }
 
-  const citationLines = sources
-    .map((source) => `${source.citationLabel} ${source.levelTitle} -> ${source.lessonTitle}`)
-    .join('\n');
-
   return {
     answer: `Based on the lesson content, here is the most relevant information:\n${evidenceLines.join(
       '\n'
-    )}\n\nCitations:\n${citationLines}`,
+    )}`,
     confidence,
     sources: sources.map((source) => ({
       levelId: source.levelId,
