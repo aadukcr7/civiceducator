@@ -1,5 +1,9 @@
 const levelsStore = require('../data/levelsStore');
 
+const MIN_MATCH_SCORE = 0.08;
+const MIN_CONFIDENCE_THRESHOLD = 0.25;
+const MAX_SOURCES = 3;
+
 const STOP_WORDS = new Set([
   'a',
   'an',
@@ -131,36 +135,62 @@ function selectEvidenceSentences(questionTokens, content) {
 function buildLowConfidenceResponse() {
   return {
     answer:
-      'I could not find enough support for that question in the current lesson content. Please ask with topic keywords or check the related level lessons.',
+      "I don't know based on the current lesson content. I could not find enough reliable support to answer this correctly.",
     confidence: 0,
     sources: [],
+    citations: [],
+    isFallback: true,
   };
 }
 
 function buildResponse({ topMatches, topScore, questionTokens }) {
-  if (!topMatches.length || topScore < 0.08) {
+  if (!topMatches.length || topScore < MIN_MATCH_SCORE) {
     return buildLowConfidenceResponse();
   }
 
   const evidenceLines = [];
-  const sources = topMatches.map((match) => {
+  const sources = topMatches.map((match, index) => {
     const snippets = selectEvidenceSentences(questionTokens, match.content);
-    snippets.forEach((snippet) => evidenceLines.push(`- ${snippet}`));
+    snippets.forEach((snippet) => evidenceLines.push(`[${index + 1}] ${snippet}`));
 
     return {
       levelId: match.levelId,
       levelTitle: match.levelTitle,
       lessonId: match.lessonId,
       lessonTitle: match.lessonTitle,
+      citationLabel: `[${index + 1}]`,
+      snippets,
     };
   });
+
+  const confidence = Math.min(0.99, Number((topScore * 2.2).toFixed(2)));
+  if (confidence < MIN_CONFIDENCE_THRESHOLD) {
+    return buildLowConfidenceResponse();
+  }
+
+  const citationLines = sources
+    .map((source) => `${source.citationLabel} ${source.levelTitle} -> ${source.lessonTitle}`)
+    .join('\n');
 
   return {
     answer: `Based on the lesson content, here is the most relevant information:\n${evidenceLines.join(
       '\n'
-    )}`,
-    confidence: Math.min(0.99, Number((topScore * 2.2).toFixed(2))),
-    sources,
+    )}\n\nCitations:\n${citationLines}`,
+    confidence,
+    sources: sources.map((source) => ({
+      levelId: source.levelId,
+      levelTitle: source.levelTitle,
+      lessonId: source.lessonId,
+      lessonTitle: source.lessonTitle,
+      citationLabel: source.citationLabel,
+    })),
+    citations: sources.map((source) => ({
+      label: source.citationLabel,
+      levelTitle: source.levelTitle,
+      lessonTitle: source.lessonTitle,
+      snippets: source.snippets,
+    })),
+    isFallback: false,
   };
 }
 
@@ -172,6 +202,8 @@ async function askLessonAssistant(question) {
       answer: 'Please enter a question first.',
       confidence: 0,
       sources: [],
+      citations: [],
+      isFallback: true,
     };
   }
 
@@ -189,7 +221,9 @@ async function askLessonAssistant(question) {
     .sort((left, right) => right.score - left.score);
 
   const topScore = ranked[0]?.score || 0;
-  const topMatches = ranked.filter((item) => item.score > 0.08).slice(0, 3);
+  const topMatches = ranked
+    .filter((item) => item.score > MIN_MATCH_SCORE)
+    .slice(0, MAX_SOURCES);
 
   return buildResponse({
     topMatches,

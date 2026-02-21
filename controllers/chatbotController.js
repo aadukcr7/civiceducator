@@ -13,6 +13,8 @@ async function askChatbot(req, res) {
         answer: 'Please type your question first.',
         confidence: 0,
         sources: [],
+        citations: [],
+        isFallback: true,
       });
     }
 
@@ -24,6 +26,8 @@ async function askChatbot(req, res) {
       answer: 'Unable to answer right now. Please try again.',
       confidence: 0,
       sources: [],
+      citations: [],
+      isFallback: true,
     });
   }
 }

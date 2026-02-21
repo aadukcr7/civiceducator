@@ -36,12 +36,18 @@
         <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
           <h5 class="card-title mb-0">Answer</h5>
           <span id="confidenceBadge" class="badge text-bg-light border"></span>
+          <span id="modeBadge" class="badge"></span>
         </div>
 
         <p id="answerText" class="mb-4" style="white-space: pre-line;"></p>
 
         <h6>Sources</h6>
         <ul id="sourceList" class="mb-0"></ul>
+
+        <div class="mt-3">
+          <h6>Citations</h6>
+          <ul id="citationList" class="mb-0"></ul>
+        </div>
       </div>
     </div>
   </div>
@@ -57,13 +63,23 @@ document.addEventListener('DOMContentLoaded', () => {
   const resultCard = document.getElementById('chatResult');
   const answerText = document.getElementById('answerText');
   const sourceList = document.getElementById('sourceList');
+  const citationList = document.getElementById('citationList');
   const confidenceBadge = document.getElementById('confidenceBadge');
+  const modeBadge = document.getElementById('modeBadge');
 
   function renderResult(payload) {
     answerText.textContent = payload.answer || 'No answer available.';
 
     const confidence = Number(payload.confidence || 0);
     confidenceBadge.textContent = `Confidence: ${Math.round(confidence * 100)}%`;
+
+    if (payload.isFallback) {
+      modeBadge.className = 'badge bg-warning text-dark';
+      modeBadge.textContent = "Fallback: I don't know";
+    } else {
+      modeBadge.className = 'badge bg-success';
+      modeBadge.textContent = 'Grounded answer';
+    }
 
     sourceList.innerHTML = '';
     if (Array.isArray(payload.sources) && payload.sources.length > 0) {
@@ -77,6 +93,23 @@ document.addEventListener('DOMContentLoaded', () => {
       li.className = 'text-muted';
       li.textContent = 'No matching lesson source found.';
       sourceList.appendChild(li);
+    }
+
+    citationList.innerHTML = '';
+    if (Array.isArray(payload.citations) && payload.citations.length > 0) {
+      payload.citations.forEach((citation) => {
+        const li = document.createElement('li');
+        const snippetText = Array.isArray(citation.snippets) && citation.snippets.length > 0
+          ? ` — ${citation.snippets[0]}`
+          : '';
+        li.textContent = `${citation.label} ${citation.levelTitle} — ${citation.lessonTitle}${snippetText}`;
+        citationList.appendChild(li);
+      });
+    } else {
+      const li = document.createElement('li');
+      li.className = 'text-muted';
+      li.textContent = 'No citation available.';
+      citationList.appendChild(li);
     }
 
     resultCard.classList.remove('d-none');
@@ -106,6 +139,8 @@ document.addEventListener('DOMContentLoaded', () => {
         answer: 'Unable to answer at this time. Please try again.',
         confidence: 0,
         sources: [],
+        citations: [],
+        isFallback: true,
       });
     } finally {
       askButton.disabled = false;
