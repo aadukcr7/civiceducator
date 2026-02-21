@@ -297,7 +297,10 @@ function buildDashboardAnalytics(levels, allProgress, attempts) {
       avgSecondsPerQuestion: item.avgSecondsPerQuestion,
     }));
 
+  const strengthIds = new Set(strengths.map((item) => item.levelId));
+
   const weakAreas = [...ranked]
+    .filter((item) => !strengthIds.has(item.levelId))
     .sort((a, b) => a.rating - b.rating)
     .slice(0, 3)
     .map((item) => ({
