@@ -10,6 +10,12 @@
     <% if (query && query.deleteError) { %>
       <div class="alert alert-danger"><%= query.deleteError %></div>
     <% } %>
+    <% if (query && query.resetError) { %>
+      <div class="alert alert-danger"><%= query.resetError %></div>
+    <% } %>
+    <% if (query && query.resetSuccess) { %>
+      <div class="alert alert-success">Learning data reset successfully. Your account is unchanged.</div>
+    <% } %>
 
     <div class="card mb-4">
       <div class="card-body">
@@ -176,47 +182,97 @@
       </div>
     </div>
 
-    <div class="card border-danger mt-4">
-      <div class="card-body">
-        <h4 class="card-title text-danger mb-3">Delete Account</h4>
-        <p class="text-muted">This permanently removes your account, progress, and quiz attempt history.</p>
+    <div class="row g-4 mt-1">
+      <div class="col-lg-6">
+        <div class="card border-warning h-100">
+          <div class="card-body">
+            <h4 class="card-title text-warning mb-3">Reset Learning Data</h4>
+            <p class="text-muted">This clears your progress and quiz attempt history, but keeps your account.</p>
 
-        <form method="POST" action="/auth/delete-account" class="row g-3">
-          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-          <div class="col-md-6">
-            <label for="deleteEmail" class="form-label">Confirm Email</label>
-            <input
-              type="email"
-              class="form-control"
-              id="deleteEmail"
-              name="email"
-              placeholder="Enter your account email"
-              required
-              autocomplete="email"
-            >
+            <form method="POST" action="/auth/reset-learning-data" class="row g-3">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+              <div class="col-12">
+                <label for="resetEmail" class="form-label">Confirm Email</label>
+                <input
+                  type="email"
+                  class="form-control"
+                  id="resetEmail"
+                  name="email"
+                  placeholder="Enter your account email"
+                  required
+                  autocomplete="email"
+                >
+              </div>
+              <div class="col-12">
+                <label for="resetPassword" class="form-label">Confirm Password</label>
+                <input
+                  type="password"
+                  class="form-control"
+                  id="resetPassword"
+                  name="password"
+                  placeholder="Enter your password"
+                  required
+                  autocomplete="current-password"
+                >
+              </div>
+              <div class="col-12">
+                <button
+                  type="submit"
+                  class="btn btn-warning"
+                  onclick="return confirm('Reset all learning data? This cannot be undone.')"
+                >
+                  Reset Learning Data
+                </button>
+              </div>
+            </form>
           </div>
-          <div class="col-md-6">
-            <label for="deletePassword" class="form-label">Confirm Password</label>
-            <input
-              type="password"
-              class="form-control"
-              id="deletePassword"
-              name="password"
-              placeholder="Enter your password"
-              required
-              autocomplete="current-password"
-            >
+        </div>
+      </div>
+
+      <div class="col-lg-6">
+        <div class="card border-danger h-100">
+          <div class="card-body">
+            <h4 class="card-title text-danger mb-3">Delete Account</h4>
+            <p class="text-muted">This permanently removes your account, progress, and quiz attempt history.</p>
+
+            <form method="POST" action="/auth/delete-account" class="row g-3">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+              <div class="col-12">
+                <label for="deleteEmail" class="form-label">Confirm Email</label>
+                <input
+                  type="email"
+                  class="form-control"
+                  id="deleteEmail"
+                  name="email"
+                  placeholder="Enter your account email"
+                  required
+                  autocomplete="email"
+                >
+              </div>
+              <div class="col-12">
+                <label for="deletePassword" class="form-label">Confirm Password</label>
+                <input
+                  type="password"
+                  class="form-control"
+                  id="deletePassword"
+                  name="password"
+                  placeholder="Enter your password"
+                  required
+                  autocomplete="current-password"
+                >
+              </div>
+              <div class="col-12">
+                <button
+                  type="submit"
+                  class="btn btn-danger"
+                  onclick="return confirm('Are you sure you want to permanently delete your account?')"
+                >
+                  Delete My Account
+                </button>
+              </div>
+            </form>
           </div>
-          <div class="col-12">
-            <button
-              type="submit"
-              class="btn btn-danger"
-              onclick="return confirm('Are you sure you want to permanently delete your account?')"
-            >
-              Delete My Account
-            </button>
-          </div>
-        </form>
+        </div>
       </div>
     </div>
   </div>

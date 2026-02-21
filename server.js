@@ -228,6 +228,8 @@ app.get('/profile', isAuthenticated, async (req, res) => {
       user,
       query: {
         deleteError: req.query.deleteError || null,
+        resetError: req.query.resetError || null,
+        resetSuccess: req.query.resetSuccess || null,
       },
       summary: {
         totalActivities,

@@ -221,6 +221,43 @@ class Progress {
       });
     });
   }
+
+  // Reset user's learning data while keeping account
+  static async resetLearningData(userId) {
+    return new Promise((resolve, reject) => {
+      db.serialize(() => {
+        db.run('BEGIN TRANSACTION');
+
+        db.run('DELETE FROM quiz_attempts WHERE user_id = ?', [userId], function (attemptsErr) {
+          if (attemptsErr) {
+            return db.run('ROLLBACK', () => reject(attemptsErr));
+          }
+
+          const deletedAttempts = this.changes || 0;
+
+          db.run('DELETE FROM progress WHERE user_id = ?', [userId], function (progressErr) {
+            if (progressErr) {
+              return db.run('ROLLBACK', () => reject(progressErr));
+            }
+
+            const deletedProgress = this.changes || 0;
+
+            db.run('COMMIT', (commitErr) => {
+              if (commitErr) {
+                return db.run('ROLLBACK', () => reject(commitErr));
+              }
+
+              resolve({
+                userId,
+                deletedAttempts,
+                deletedProgress,
+              });
+            });
+          });
+        });
+      });
+    });
+  }
 }
 
 module.exports = Progress;
