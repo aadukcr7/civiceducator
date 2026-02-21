@@ -22,6 +22,7 @@ const { createConcurrentUserLimiter } = require('./middleware/concurrentUsers');
 const app = express();
 const PORT = process.env.PORT || 5000;
 const MAX_CONCURRENT_USERS = Number(process.env.MAX_CONCURRENT_USERS) || 0;
+const MAX_PORT_RETRIES = 10;
 
 const concurrentUserLimiter = createConcurrentUserLimiter({
   maxUsers: MAX_CONCURRENT_USERS,
@@ -276,12 +277,30 @@ app.use((err, req, res, next) => {
   res.status(err.status || 500).render('404', { error: errorMessage });
 });
 
-// Start server
-const server = app.listen(PORT, () => {
-  console.log(`✓ Civic Education App running on http://localhost:${PORT}`);
-  console.log(`✓ Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`✓ Session Secret configured: ${!!process.env.SESSION_SECRET}`);
-});
+// Start server with retry on occupied port
+let server;
+
+function startServer(port, retryCount = 0) {
+  server = app.listen(port, () => {
+    console.log(`✓ Civic Education App running on http://localhost:${port}`);
+    console.log(`✓ Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`✓ Session Secret configured: ${!!process.env.SESSION_SECRET}`);
+  });
+
+  server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE' && retryCount < MAX_PORT_RETRIES) {
+      const nextPort = Number(port) + 1;
+      console.warn(`Port ${port} is busy. Retrying on port ${nextPort}...`);
+      startServer(nextPort, retryCount + 1);
+      return;
+    }
+
+    console.error('Failed to start server:', err.message);
+    process.exit(1);
+  });
+}
+
+startServer(Number(PORT));
 
 // Graceful shutdown
 process.on('SIGTERM', () => {
