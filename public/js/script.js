@@ -43,8 +43,11 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Password strength indicator for registration
-  const passwordInput = document.getElementById('password');
+  // Password strength indicator for registration only
+  const registerForm = document.querySelector('form[action="/auth/register"]');
+  const passwordInput = registerForm
+    ? registerForm.querySelector('input[name="password"]')
+    : null;
   if (passwordInput) {
     passwordInput.addEventListener('input', (e) => {
       const strength = getPasswordStrength(e.target.value);
