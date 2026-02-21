@@ -2,6 +2,13 @@ const express = require('express');
 const { body, validationResult } = require('express-validator');
 const User = require('../models/User');
 const Progress = require('../models/Progress');
+const {
+  destroySession,
+  getConcurrentLimiter,
+  mapCredentialErrorToMessage,
+  setAuthenticatedSession,
+  validateCurrentUserCredentials,
+} = require('../services/authAccountService');
 const { isAuthenticated, isNotAuthenticated } = require('../middleware/auth');
 
 const router = express.Router();
@@ -57,7 +64,7 @@ router.post(
   ],
   async (req, res) => {
     try {
-      const limiter = req.app.locals.concurrentUserLimiter;
+      const limiter = getConcurrentLimiter(req);
       if (limiter && limiter.isAtCapacity()) {
         return res.status(503).render('register', {
           errors: [{ msg: 'Maximum active users reached. Please try again shortly.' }],
@@ -94,12 +101,7 @@ router.post(
 
       // Create new user
       const newUser = await User.create(username, email, password);
-      req.session.userId = newUser.id;
-      req.session.username = newUser.username;
-      req.session.email = newUser.email;
-      if (limiter) {
-        limiter.registerSession(req.sessionID);
-      }
+      setAuthenticatedSession(req, newUser);
 
       res.redirect('/dashboard');
     } catch (err) {
@@ -127,7 +129,7 @@ router.post(
   ],
   async (req, res) => {
     try {
-      const limiter = req.app.locals.concurrentUserLimiter;
+      const limiter = getConcurrentLimiter(req);
       if (limiter && limiter.isAtCapacity()) {
         return res.status(503).render('login', {
           errors: [{ msg: 'Maximum active users reached. Please try again shortly.' }],
@@ -168,12 +170,7 @@ router.post(
       }
 
       // Set session
-      req.session.userId = user.id;
-      req.session.username = user.username;
-      req.session.email = user.email;
-      if (limiter) {
-        limiter.registerSession(req.sessionID);
-      }
+      setAuthenticatedSession(req, user);
 
       const returnTo = req.session.returnTo || '/dashboard';
       delete req.session.returnTo;
@@ -189,19 +186,13 @@ router.post(
 );
 
 // Logout
-router.get('/logout', isAuthenticated, (req, res) => {
-  const limiter = req.app.locals.concurrentUserLimiter;
-  const currentSessionId = req.sessionID;
-
-  req.session.destroy((err) => {
-    if (err) {
-      return res.render('404', { error: 'Logout failed' });
-    }
-    if (limiter) {
-      limiter.unregisterSession(currentSessionId);
-    }
+router.get('/logout', isAuthenticated, async (req, res) => {
+  try {
+    await destroySession(req);
     res.redirect('/');
-  });
+  } catch (err) {
+    res.render('404', { error: 'Logout failed' });
+  }
 });
 
 // Delete account (authenticated user only)
@@ -224,38 +215,18 @@ router.post(
       const inputEmail = String(req.body.email || '').trim().toLowerCase();
       const inputPassword = String(req.body.password || '');
 
-      const currentUser = await User.findById(userId);
-      if (!currentUser) {
+      const validation = await validateCurrentUserCredentials(userId, inputEmail, inputPassword);
+      if (!validation.ok && validation.code === 'USER_NOT_FOUND') {
         return res.redirect('/auth/login');
       }
-
-      if (currentUser.email.toLowerCase() !== inputEmail) {
-        return res.redirect('/profile?deleteError=Email%20does%20not%20match%20your%20account');
-      }
-
-      const userWithPassword = await User.findByEmail(currentUser.email);
-      if (!userWithPassword) {
-        return res.redirect('/profile?deleteError=Unable%20to%20validate%20account');
-      }
-
-      const isPasswordValid = await User.verifyPassword(inputPassword, userWithPassword.password);
-      if (!isPasswordValid) {
-        return res.redirect('/profile?deleteError=Incorrect%20password');
+      if (!validation.ok) {
+        return res.redirect(`/profile?${mapCredentialErrorToMessage(validation.code, 'delete')}`);
       }
 
       await User.deleteAccount(userId);
 
-      const limiter = req.app.locals.concurrentUserLimiter;
-      const currentSessionId = req.sessionID;
-      req.session.destroy((destroyErr) => {
-        if (destroyErr) {
-          return res.redirect('/auth/login');
-        }
-        if (limiter) {
-          limiter.unregisterSession(currentSessionId);
-        }
-        res.redirect('/?deleted=1');
-      });
+      await destroySession(req);
+      res.redirect('/?deleted=1');
     } catch (err) {
       console.error('Delete account error:', err);
       res.redirect('/profile?deleteError=Could%20not%20delete%20account');
@@ -283,23 +254,12 @@ router.post(
       const inputEmail = String(req.body.email || '').trim().toLowerCase();
       const inputPassword = String(req.body.password || '');
 
-      const currentUser = await User.findById(userId);
-      if (!currentUser) {
+      const validation = await validateCurrentUserCredentials(userId, inputEmail, inputPassword);
+      if (!validation.ok && validation.code === 'USER_NOT_FOUND') {
         return res.redirect('/auth/login');
       }
-
-      if (currentUser.email.toLowerCase() !== inputEmail) {
-        return res.redirect('/profile?resetError=Email%20does%20not%20match%20your%20account');
-      }
-
-      const userWithPassword = await User.findByEmail(currentUser.email);
-      if (!userWithPassword) {
-        return res.redirect('/profile?resetError=Unable%20to%20validate%20account');
-      }
-
-      const isPasswordValid = await User.verifyPassword(inputPassword, userWithPassword.password);
-      if (!isPasswordValid) {
-        return res.redirect('/profile?resetError=Incorrect%20password');
+      if (!validation.ok) {
+        return res.redirect(`/profile?${mapCredentialErrorToMessage(validation.code, 'reset')}`);
       }
 
       await Progress.resetLearningData(userId);
