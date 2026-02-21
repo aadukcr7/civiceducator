@@ -14,13 +14,10 @@
     <div class="card mb-4">
       <div class="card-body">
         <div class="row g-3 align-items-center">
-          <div class="col-md-8">
+          <div class="col-12">
             <h4 class="mb-1"><%= user?.username || 'Learner' %></h4>
             <p class="mb-1 text-muted"><%= user?.email || '' %></p>
             <small class="text-muted">Joined: <%= user?.created_at ? new Date(user.created_at).toLocaleDateString() : '-' %></small>
-          </div>
-          <div class="col-md-4 text-md-end">
-            <span class="badge bg-primary">Total Activities: <%= summary.totalActivities %></span>
           </div>
         </div>
       </div>
