@@ -20,7 +20,18 @@ const { createConcurrentUserLimiter } = require('./middleware/concurrentUsers');
 const app = express();
 const PORT = process.env.PORT || 5000;
 const MAX_CONCURRENT_USERS = Number(process.env.MAX_CONCURRENT_USERS) || 0;
-const MAX_PORT_RETRIES = 10;
+const MAX_PORT_RETRIES = Number(process.env.MAX_PORT_RETRIES) || 10;
+
+function getStartPort() {
+  const parsed = Number(PORT);
+  if (!Number.isInteger(parsed) || parsed <= 0 || parsed > 65535) {
+    console.warn(
+      `Invalid PORT value "${PORT}". Falling back to default port 5000.`
+    );
+    return 5000;
+  }
+  return parsed;
+}
 
 const concurrentUserLimiter = createConcurrentUserLimiter({
   maxUsers: MAX_CONCURRENT_USERS,
@@ -188,12 +199,23 @@ function startServer(port, retryCount = 0) {
       return;
     }
 
+    if (err.code === 'EADDRINUSE' && retryCount >= MAX_PORT_RETRIES) {
+      console.error(
+        `Failed to bind after ${MAX_PORT_RETRIES + 1} attempts starting from port ${port - retryCount}.`
+      );
+      console.error(
+        'Set PORT to a free port or increase MAX_PORT_RETRIES in your environment.'
+      );
+      process.exit(1);
+      return;
+    }
+
     console.error('Failed to start server:', err.message);
     process.exit(1);
   });
 }
 
-startServer(Number(PORT));
+startServer(getStartPort());
 
 // Graceful shutdown
 process.on('SIGTERM', () => {

@@ -102,6 +102,7 @@ PASSING_SCORE=70
 # Optional features
 MAX_CONCURRENT_USERS=100
 ADAPTIVE_QUIZ_QUESTION_COUNT=12
+MAX_PORT_RETRIES=10
 
 # Admin access control (recommended)
 ADMIN_EMAIL=admin@example.com
@@ -139,6 +140,20 @@ npm run dev
 ```
 
 App URL: `http://localhost:5000`
+
+If port `5000` is already in use, the app automatically retries on the next ports (`5001`, `5002`, ...), up to `MAX_PORT_RETRIES`.
+Always use the exact URL printed in the startup log:
+
+```text
+✓ Civic Education App running on http://localhost:<active-port>
+```
+
+## Runtime Reliability / Troubleshooting
+
+- If startup fails with `EADDRINUSE`, either free the conflicting port or set a different `PORT` in `.env`
+- If `PORT` is invalid (non-numeric or out of range), the app falls back to `5000`
+- To allow more fallback attempts, increase `MAX_PORT_RETRIES`
+- If startup still exits with code `1`, check the first error line after `Failed to start server:` for the root cause
 
 ## Scripts
 
