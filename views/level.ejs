@@ -85,6 +85,14 @@
           <div class="card-body">
             <h5 class="card-title">Ready for assessment?</h5>
             <p class="text-muted mb-3">You can attempt the quiz anytime without completing all lessons first.</p>
+            <p class="mb-3">
+              <small class="text-muted">
+                This quiz has <strong><%= quizQuestionsPerAttempt || 0 %> questions per attempt</strong>
+                <% if ((quizPoolCount || 0) > (quizQuestionsPerAttempt || 0)) { %>
+                  from a pool of <%= quizPoolCount %>.
+                <% } %>
+              </small>
+            </p>
             <a href="/levels/<%= level.id %>/quiz" class="btn btn-primary">Go to Quiz</a>
           </div>
         </div>

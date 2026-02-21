@@ -21,7 +21,11 @@
               
               <% if (level.lessons) { %>
                 <p class="text-muted mb-3">
-                  <small><strong><%= level.lessons.length %> lessons</strong> • <%= level.quiz ? level.quiz.length : 0 %> quiz questions</small>
+                  <small><strong><%= level.lessons.length %> lessons</strong> • <%= level.quizQuestionsPerAttempt || 0 %> quiz questions per attempt</small>
+                  <% if ((level.quizPoolCount || 0) > (level.quizQuestionsPerAttempt || 0)) { %>
+                    <br>
+                    <small class="text-muted">from a pool of <%= level.quizPoolCount %> questions</small>
+                  <% } %>
                 </p>
               <% } %>
               

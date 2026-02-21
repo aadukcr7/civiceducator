@@ -401,12 +401,19 @@ router.get('/', async (req, res) => {
       }
     });
 
-    const levelsWithProgress = levels.map((level) => ({
-      ...level,
-      completed: !!completedMap[level.id],
-      score: completedMap[level.id]?.score || null,
-      completedAt: completedMap[level.id]?.completed_at || null,
-    }));
+    const levelsWithProgress = levels.map((level) => {
+      const quizPool = buildQuizPoolForLevel(level);
+      const quizQuestionsPerAttempt = getAdaptiveQuestionTarget(quizPool.length);
+
+      return {
+        ...level,
+        completed: !!completedMap[level.id],
+        score: completedMap[level.id]?.score || null,
+        completedAt: completedMap[level.id]?.completed_at || null,
+        quizPoolCount: quizPool.length,
+        quizQuestionsPerAttempt,
+      };
+    });
 
     res.render('levels', { levels: levelsWithProgress });
   } catch (err) {
@@ -509,6 +516,8 @@ router.get('/:levelId/quiz', async (req, res) => {
         ...level,
         quiz: randomizedQuiz,
       },
+      quizQuestionsPerAttempt: randomizedQuiz.length,
+      quizPoolCount: quizPool.length,
       adaptiveDifficulty: getDifficultyLabel(adaptiveDifficulty),
       progress: progress || { completed: false, score: null },
       lessons: level.lessons || [],
@@ -533,11 +542,15 @@ router.get('/:levelId', async (req, res) => {
 
     // Get user's progress for this level
     const progress = await Progress.getProgress(userId, levelId);
+    const quizPool = buildQuizPoolForLevel(level);
+    const quizQuestionsPerAttempt = getAdaptiveQuestionTarget(quizPool.length);
 
     res.render('level', {
       level,
       progress: progress || { completed: false, score: null },
       lessons: level.lessons || [],
+      quizQuestionsPerAttempt,
+      quizPoolCount: quizPool.length,
     });
   } catch (err) {
     console.error('Error fetching level lessons:', err);
