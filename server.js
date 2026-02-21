@@ -142,10 +142,6 @@ app.get('/dashboard', isAuthenticated, (req, res) => {
   res.render('dashboard');
 });
 
-app.get('/accessibility', (req, res) => {
-  res.render('accessibility', { title: 'Accessibility Center' });
-});
-
 // Profile
 app.get('/profile', isAuthenticated, async (req, res) => {
   try {
