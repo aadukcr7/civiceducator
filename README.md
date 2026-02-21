@@ -1,6 +1,18 @@
 # Civic Education Nepal
 
-A full-stack civic learning platform that teaches constitutional rights, responsibilities, and civic behavior through structured lessons, quizzes, and progress analytics.
+<p align="center">
+  <strong>A full-stack civic learning platform for rights, responsibilities, and informed citizenship.</strong>
+</p>
+
+<p align="center">
+  <a href="https://civiceducator.onrender.com/">Live Demo</a> •
+  <a href="#what-this-project-does">Features</a> •
+  <a href="#how-it-works">How It Works</a> •
+  <a href="#screenshots">Screenshots</a> •
+  <a href="#getting-started-locally">Setup</a>
+</p>
+
+---
 
 ## Live Deployment
 
@@ -8,60 +20,75 @@ A full-stack civic learning platform that teaches constitutional rights, respons
 
 ## What This Project Does
 
-This project provides a guided civic education experience where users can study lesson content, take level-based quizzes, and track their learning progress over time. It combines content delivery, adaptive assessment, and performance insights in one web application.
+This application delivers structured civic education through lessons and quizzes, then tracks each learner’s progress with analytics and recommendations. It is designed to make civic learning practical, measurable, and easy to manage.
 
-Core capabilities:
+### Core Features
 
-- User registration, login, and session-based authentication
-- Level-based civic lessons and quizzes
-- Adaptive quiz behavior based on recent performance and speed
-- Learner dashboard with score history and topic-level analytics
-- Admin panel for managing levels, lessons, quizzes, and users
+- Secure user registration and login
+- Level-based lessons and quizzes
+- Adaptive quiz behavior from recent performance
+- Dashboard insights for strengths and weak areas
+- Admin tools for content and learner management
 
 ## Who This Project Helps
 
-- **Students and self-learners** who want practical civic knowledge in a structured format
-- **Teachers and trainers** who need measurable learning activities for civic instruction
-- **Community organizations / NGOs** that run civic awareness programs
-- **Administrators and maintainers** who need a manageable content platform without frequent code changes
+- **Students and self-learners:** learn civic topics in a guided, trackable format
+- **Teachers and trainers:** use measurable quizzes for practice and revision
+- **Community programs and NGOs:** run civic awareness modules online
+- **Admins and maintainers:** manage lessons and quiz content efficiently
 
 ## How It Works
 
-### 1. Authentication and Access
+### 1) Authentication & Session Management
 
-- Users register and sign in through secure auth routes
+- Users sign up and log in through secure auth routes
 - Passwords are hashed with `bcryptjs`
-- Sessions are persisted using `express-session` + `connect-sqlite3`
-- Optional concurrent-user limiting can control active logins
+- Sessions are stored with `express-session` + `connect-sqlite3`
 
-### 2. Learning and Assessment Flow
+### 2) Lesson and Quiz Flow
 
-- Learners open a level and study the lesson content
-- Quiz questions are served with randomization and anti-repeat logic
-- On submission, the app computes score, correctness, and completion status
-- Progress is stored and shown in dashboard/profile views
+- Learners study a level lesson, then attempt the quiz
+- Questions are randomized with anti-repeat behavior
+- Scores and progress are calculated and saved after submission
 
-### 3. Adaptive Quiz and Recommendations
+### 3) Adaptive Learning Logic
 
-- Quiz attempt history (score + time data) is stored per learner
-- Difficulty can be adapted (`easy`, `medium`, `hard`) based on recent attempts
-- For larger quizzes, question counts can be configured via environment variables
-- The app highlights stronger/weaker topics and recommends next learning steps
+- Past attempts (score and timing) influence quiz difficulty
+- Difficulty is adjusted across `easy`, `medium`, and `hard`
+- The app recommends next learning focus from weaker areas
 
-### 4. Admin Content Management
+### 4) Admin Content Operations
 
-- Admin users can create, edit, and remove levels and lessons
-- Quiz question banks can be updated from the admin interface
-- User management supports account control operations
+- Admin panel supports create/edit/delete for levels and lessons
+- Quiz questions can be managed without direct code edits
+- User access and account actions are available to admins
+
+## Screenshots
+
+### Homepage
+
+![Homepage](images/homepage.jpg)
+
+### Login
+
+![Login](images/login.jpg)
+
+### Levels
+
+![Levels](images/levels.jpg)
+
+### Dashboard
+
+![Dashboard](images/dashboard.jpg)
 
 ## Technical Overview
 
 - **Backend:** Node.js, Express
-- **Views:** EJS (server-rendered)
+- **Template Engine:** EJS (server-rendered)
 - **Database:** SQLite (`sqlite3`)
-- **Sessions:** `connect-sqlite3`
 - **Security:** `helmet`, `express-rate-limit`, `csurf`, `express-validator`
-- **Observability:** `morgan` request logging
+- **Session Store:** `connect-sqlite3`
+- **Logging:** `morgan`
 
 ## Project Structure
 
@@ -95,7 +122,7 @@ npm install
 
 ### Environment Setup
 
-Create a `.env` file in the project root and configure at least:
+Create a `.env` file in the project root:
 
 ```env
 PORT=5000
@@ -107,7 +134,7 @@ ADAPTIVE_QUIZ_QUESTION_COUNT=12
 MAX_PORT_RETRIES=10
 ```
 
-### Run the Application
+### Run
 
 ```bash
 npm start
@@ -121,18 +148,16 @@ npm run dev
 
 ## Scripts
 
-- `npm start` - Start the application
-- `npm run dev` - Start with nodemon for development
+- `npm start` - Start server
+- `npm run dev` - Start with nodemon
 - `npm run format` - Format files with Prettier
 - `npm run check-format` - Check formatting
 
 ## Deployment
 
-The application is deployed on Render:
+Hosted on Render: https://civiceducator.onrender.com/
 
-- https://civiceducator.onrender.com/
-
-`Procfile` is included for web process startup:
+`Procfile` process definition:
 
 ```text
 web: node server.js
