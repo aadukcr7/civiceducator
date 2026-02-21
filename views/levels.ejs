@@ -31,13 +31,18 @@
                 </div>
               <% } %>
               
-              <a href="/levels/<%= level.id %>" class="btn btn-primary w-100">
-                <% if (level.completed) { %>
-                  Review Level
-                <% } else { %>
-                  Start Learning
-                <% } %>
-              </a>
+              <div class="d-grid gap-2">
+                <a href="/levels/<%= level.id %>" class="btn btn-primary w-100">
+                  <% if (level.completed) { %>
+                    Review Lessons
+                  <% } else { %>
+                    Start Lessons
+                  <% } %>
+                </a>
+                <a href="/levels/<%= level.id %>/quiz" class="btn btn-outline-primary w-100">
+                  Take Quiz
+                </a>
+              </div>
             </div>
           </div>
         <% }); %>

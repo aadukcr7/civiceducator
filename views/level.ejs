@@ -2,11 +2,16 @@
 
 <main class="flex-grow-1">
   <div class="container py-5">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+      <h1 class="mb-0"><%= level.title %></h1>
+      <a href="/levels/<%= level.id %>/quiz" class="btn btn-primary">Take Quiz</a>
+    </div>
+
     <div class="row">
       <!-- Sidebar Navigation -->
       <div class="col-lg-3">
         <div class="lesson-sidebar">
-          <h5 class="mb-3"><%= level.title %></h5>
+          <h5 class="mb-3">Lessons</h5>
           <% if (lessons && lessons.length > 0) { %>
             <div class="lesson-sidebar-controls mb-3">
               <div class="input-group input-group-sm mb-2">
@@ -76,39 +81,12 @@
           </div>
         <% } %>
 
-        <!-- Quiz Section -->
-        <div class="quiz-section">
-          <h3>Take the Quiz</h3>
-          <p class="text-muted">Answer all questions. You need 70% to pass.</p>
-          <% if (adaptiveDifficulty) { %>
-            <p class="text-muted mb-3">
-              <strong>Adaptive Mode:</strong> Your next quiz difficulty is set to <%= adaptiveDifficulty %> based on recent performance and completion speed.
-            </p>
-          <% } %>
-          
-          <form method="POST" action="/levels/<%= level.id %>/quiz" id="quizForm">
-            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-            <% if (level.quiz && level.quiz.length > 0) { %>
-              <% level.quiz.forEach((question, qIndex) => { %>
-                <div class="quiz-question">
-                  <h5><strong><%= qIndex + 1 %>.</strong> <%= question.question %></h5>
-                  <% question.options.forEach((option, oIndex) => { %>
-                    <div class="form-check">
-                      <input class="form-check-input" type="radio" name="answers[q<%= question.id %>]" 
-                        id="q<%= question.id %>_<%= oIndex %>" value="<%= oIndex %>" required>
-                      <label class="form-check-label" for="q<%= question.id %>_<%= oIndex %>">
-                        <%= option %>
-                      </label>
-                    </div>
-                  <% }); %>
-                </div>
-              <% }); %>
-              
-              <button type="submit" class="btn btn-primary btn-lg mt-4">Submit Quiz</button>
-            <% } else { %>
-              <p class="alert alert-warning">No quiz available for this level yet.</p>
-            <% } %>
-          </form>
+        <div class="card mt-4">
+          <div class="card-body">
+            <h5 class="card-title">Ready for assessment?</h5>
+            <p class="text-muted mb-3">You can attempt the quiz anytime without completing all lessons first.</p>
+            <a href="/levels/<%= level.id %>/quiz" class="btn btn-primary">Go to Quiz</a>
+          </div>
         </div>
 
         <!-- Progress Info -->
@@ -122,8 +100,9 @@
     </div>
 
     <!-- Back Button -->
-    <div class="mt-4">
+    <div class="mt-4 d-flex gap-2 flex-wrap">
       <a href="/levels" class="btn btn-outline-secondary">← Back to Levels</a>
+      <a href="/levels/<%= level.id %>/quiz" class="btn btn-outline-primary">Take Quiz</a>
     </div>
   </div>
 </main>

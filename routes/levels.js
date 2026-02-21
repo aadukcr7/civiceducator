@@ -460,8 +460,8 @@ router.get('/data/dashboard', async (req, res) => {
   }
 });
 
-// Get specific level with lessons
-router.get('/:levelId', async (req, res) => {
+// Get specific level quiz page (direct access allowed)
+router.get('/:levelId/quiz', async (req, res) => {
   try {
     const levelId = parseInt(req.params.levelId);
     const userId = req.session.userId;
@@ -501,7 +501,7 @@ router.get('/:levelId', async (req, res) => {
       totalQuestions: randomizedQuiz.length,
     };
 
-    res.render('level', {
+    res.render('level-quiz', {
       level: {
         ...level,
         quiz: randomizedQuiz,
@@ -513,6 +513,32 @@ router.get('/:levelId', async (req, res) => {
   } catch (err) {
     console.error('Error fetching level:', err);
     res.render('404', { error: 'Error loading level' });
+  }
+});
+
+// Get specific level lessons page
+router.get('/:levelId', async (req, res) => {
+  try {
+    const levelId = parseInt(req.params.levelId);
+    const userId = req.session.userId;
+
+    const levels = await levelsStore.getLevels();
+    const level = levels.find((l) => l.id === levelId);
+    if (!level) {
+      return res.status(404).render('404', { error: 'Level not found' });
+    }
+
+    // Get user's progress for this level
+    const progress = await Progress.getProgress(userId, levelId);
+
+    res.render('level', {
+      level,
+      progress: progress || { completed: false, score: null },
+      lessons: level.lessons || [],
+    });
+  } catch (err) {
+    console.error('Error fetching level lessons:', err);
+    res.render('404', { error: 'Error loading level lessons' });
   }
 });
 
