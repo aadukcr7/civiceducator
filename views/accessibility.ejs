@@ -1,0 +1,59 @@
+<%- include('partials/header', { title: 'Accessibility Center' }) %>
+
+<main class="flex-grow-1">
+  <div class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        <div class="card shadow-sm">
+          <div class="card-body p-4 p-md-5">
+            <h1 class="h3 mb-3" data-i18n="accessibility.title">Accessibility Center</h1>
+            <p class="text-muted mb-4" data-i18n="accessibility.subtitle">
+              Customize language, reading experience, and listening support.
+            </p>
+
+            <form id="accessibilityForm" class="d-grid gap-4" novalidate>
+              <div>
+                <label for="languageSelect" class="form-label fw-semibold" data-i18n="accessibility.languageLabel">Language</label>
+                <select id="languageSelect" class="form-select" aria-describedby="languageHelp">
+                  <option value="en">English</option>
+                  <option value="ne">नेपाली (Nepali)</option>
+                </select>
+                <div id="languageHelp" class="form-text" data-i18n="accessibility.languageHelp">
+                  Applies to interface labels available in the app.
+                </div>
+              </div>
+
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="readingLevelToggle">
+                <label class="form-check-label fw-semibold" for="readingLevelToggle" data-i18n="accessibility.readingLevelLabel">Reading level mode (simpler wording)</label>
+              </div>
+
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="dyslexiaToggle">
+                <label class="form-check-label fw-semibold" for="dyslexiaToggle" data-i18n="accessibility.dyslexiaLabel">Dyslexia-friendly layout</label>
+              </div>
+
+              <div>
+                <p class="fw-semibold mb-2" data-i18n="accessibility.ttsLabel">Text-to-speech</p>
+                <div class="d-flex flex-wrap gap-2">
+                  <button type="button" class="btn btn-primary" id="ttsReadPageBtn" data-i18n="accessibility.readPageBtn">Read this page</button>
+                  <button type="button" class="btn btn-outline-secondary" id="ttsStopBtn" data-i18n="accessibility.stopBtn">Stop</button>
+                </div>
+                <div class="form-text mt-2" data-i18n="accessibility.ttsHelp">
+                  Uses your browser's speech synthesis voice.
+                </div>
+              </div>
+
+              <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-success" data-i18n="accessibility.saveBtn">Save preferences</button>
+                <button type="button" class="btn btn-outline-danger" id="accessibilityResetBtn" data-i18n="accessibility.resetBtn">Reset</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<%- include('partials/footer') %>

@@ -780,3 +780,39 @@ main {
 .feature-card {
   animation: fadeIn 0.5s ease-out;
 }
+
+body.reading-level-mode main {
+  font-size: 1.08rem;
+  line-height: 1.85;
+}
+
+body.reading-level-mode main .container {
+  max-width: 960px;
+}
+
+body.reading-level-mode p,
+body.reading-level-mode li {
+  letter-spacing: 0.02em;
+  word-spacing: 0.07em;
+}
+
+body.dyslexia-friendly-mode {
+  font-family: Arial, Verdana, Tahoma, sans-serif;
+}
+
+body.dyslexia-friendly-mode p,
+body.dyslexia-friendly-mode li {
+  letter-spacing: 0.06em;
+  word-spacing: 0.16em;
+  line-height: 1.95;
+}
+
+body.dyslexia-friendly-mode .card,
+body.dyslexia-friendly-mode .level-card,
+body.dyslexia-friendly-mode .feature-card,
+body.dyslexia-friendly-mode .step-card,
+body.dyslexia-friendly-mode .curriculum-card,
+body.dyslexia-friendly-mode .stat-card {
+  box-shadow: none;
+  border: 2px solid var(--border);
+}
