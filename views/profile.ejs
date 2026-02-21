@@ -4,7 +4,12 @@
   <div class="container py-5">
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
       <h1 class="mb-0">Your Profile</h1>
-      <a href="/dashboard" class="btn btn-outline-secondary">Back to Dashboard</a>
+      <div class="d-flex gap-2">
+        <a href="/dashboard" class="btn btn-outline-secondary">Back to Dashboard</a>
+        <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#logoutConfirmModal">
+          Logout
+        </button>
+      </div>
     </div>
 
     <% if (query && query.deleteError) { %>
@@ -272,6 +277,24 @@
               </div>
             </form>
           </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="logoutConfirmModal" tabindex="-1" aria-labelledby="logoutConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="logoutConfirmModalLabel">Confirm Logout</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          Are you sure you want to log out?
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <a href="/auth/logout" class="btn btn-danger">Yes, Log Out</a>
         </div>
       </div>
     </div>
