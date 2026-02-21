@@ -54,7 +54,6 @@ async function getProfileViewModel(userId, query = {}) {
         lessonsCount: Array.isArray(level.lessons) ? level.lessons.length : 0,
         attemptsCount: levelAttempts.length,
         bestScore,
-        lastAttemptAt: levelAttempts[0]?.created_at || null,
       };
     })
     .filter(Boolean)

@@ -274,7 +274,7 @@ router.post(
     body('content').trim().notEmpty().withMessage('Content is required'),
   ],
   async (req, res) => {
-    const level = await levelsStore.getLevel(req.params.levelId);
+    const level = await adminLevelsService.getLevel(req.params.levelId);
     if (!level) {
       return res.status(404).render('404', { error: 'Level not found' });
     }
@@ -415,7 +415,7 @@ router.post(
     body('correct').trim().notEmpty().withMessage('Correct index is required'),
   ],
   async (req, res) => {
-    const level = await levelsStore.getLevel(req.params.levelId);
+    const level = await adminLevelsService.getLevel(req.params.levelId);
     if (!level) {
       return res.status(404).render('404', { error: 'Level not found' });
     }

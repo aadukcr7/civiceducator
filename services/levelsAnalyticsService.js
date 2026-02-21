@@ -83,9 +83,13 @@ function buildDashboardAnalytics(levels, allProgress, attempts) {
         Math.max(0, ((item.avgSecondsPerQuestion || FAST_SECONDS_PER_QUESTION) - 30) * 0.6),
     }));
 
+  const totalRanked = ranked.length;
+  const strengthCount = Math.min(3, Math.max(1, Math.ceil(totalRanked / 2)));
+  const weakCount = Math.min(3, Math.floor(totalRanked / 2));
+
   const strengths = [...ranked]
     .sort((a, b) => b.rating - a.rating)
-    .slice(0, 3)
+    .slice(0, strengthCount)
     .map((item) => ({
       levelId: item.levelId,
       topic: item.topic,
@@ -98,7 +102,7 @@ function buildDashboardAnalytics(levels, allProgress, attempts) {
   const weakAreas = [...ranked]
     .filter((item) => !strengthIds.has(item.levelId))
     .sort((a, b) => a.rating - b.rating)
-    .slice(0, 3)
+    .slice(0, weakCount)
     .map((item) => ({
       levelId: item.levelId,
       topic: item.topic,
