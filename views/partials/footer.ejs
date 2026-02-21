@@ -10,6 +10,9 @@
           <h5>Quick Links</h5>
           <ul class="list-unstyled">
             <li><a href="/">Home</a></li>
+            <% if (!isAuthenticated) { %>
+              <li><a href="/about">About</a></li>
+            <% } %>
             <% if (isAuthenticated) { %>
               <li><a href="/dashboard">Dashboard</a></li>
               <li><a href="/levels">Levels</a></li>

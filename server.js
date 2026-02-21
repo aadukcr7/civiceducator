@@ -14,7 +14,7 @@ const authRoutes = require('./routes/auth');
 const levelsRoutes = require('./routes/levels');
 const adminRoutes = require('./routes/admin');
 const { getProfileViewModel } = require('./services/profileService');
-const { isAuthenticated } = require('./middleware/auth');
+const { isAuthenticated, isNotAuthenticated } = require('./middleware/auth');
 const { createConcurrentUserLimiter } = require('./middleware/concurrentUsers');
 
 const app = express();
@@ -135,6 +135,11 @@ app.use('/levels', levelsRoutes);
 // Home page
 app.get('/', (req, res) => {
   res.render('home');
+});
+
+// About (guest-only walkthrough page)
+app.get('/about', isNotAuthenticated, (req, res) => {
+  res.render('about');
 });
 
 // Dashboard
