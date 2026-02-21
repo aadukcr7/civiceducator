@@ -1,216 +1,143 @@
 # Civic Education Nepal
 
-Civic Education Nepal is an interactive learning platform that helps people understand civic responsibilities, constitutional values, social behavior, public systems, and informed digital citizenship in a practical way.
+A full-stack civic learning platform that teaches constitutional rights, responsibilities, and civic behavior through structured lessons, quizzes, and progress analytics.
 
-It combines lesson-based learning with quizzes, adaptive difficulty, progress tracking, and analytics so learners can see where they are improving and what to study next.
+## Live Deployment
+
+- **Production URL:** https://civiceducator.onrender.com/
 
 ## What This Project Does
 
-- Delivers structured civic learning levels with readable lessons and quizzes
-- Tracks each learner's progress, score history, and level completion
-- Uses adaptive quiz behavior (difficulty + question selection) based on recent performance and time-to-complete
-- Provides learner analytics (strengths, weak areas, recommended next lesson)
-- Offers an admin panel for managing levels, lessons, and quiz questions
+This project provides a guided civic education experience where users can study lesson content, take level-based quizzes, and track their learning progress over time. It combines content delivery, adaptive assessment, and performance insights in one web application.
 
-## Who This Helps
+Core capabilities:
 
-- **Students and learners:** understand civic concepts in a guided, measurable format
-- **Teachers and trainers:** use levels/quizzes to support civic classes and revision
-- **Community programs and NGOs:** deliver awareness modules in a lightweight web app
-- **Project maintainers/admins:** manage content without changing code each time
+- User registration, login, and session-based authentication
+- Level-based civic lessons and quizzes
+- Adaptive quiz behavior based on recent performance and speed
+- Learner dashboard with score history and topic-level analytics
+- Admin panel for managing levels, lessons, quizzes, and users
 
-## How the System Works
+## Who This Project Helps
 
-### 1) Authentication and Sessions
+- **Students and self-learners** who want practical civic knowledge in a structured format
+- **Teachers and trainers** who need measurable learning activities for civic instruction
+- **Community organizations / NGOs** that run civic awareness programs
+- **Administrators and maintainers** who need a manageable content platform without frequent code changes
 
-- Users register/login through secure routes
+## How It Works
+
+### 1. Authentication and Access
+
+- Users register and sign in through secure auth routes
 - Passwords are hashed with `bcryptjs`
-- Sessions are stored in SQLite using `connect-sqlite3`
-- Optional concurrent-user limiting can restrict active logged-in sessions
+- Sessions are persisted using `express-session` + `connect-sqlite3`
+- Optional concurrent-user limiting can control active logins
 
-### 2) Learning Flow
+### 2. Learning and Assessment Flow
 
-- A learner opens a level and studies the lesson content
-- Quiz questions are presented with randomization + anti-repeat logic
-- On submit, score and completion are calculated and saved
-- Results are shown immediately with per-question correctness
+- Learners open a level and study the lesson content
+- Quiz questions are served with randomization and anti-repeat logic
+- On submission, the app computes score, correctness, and completion status
+- Progress is stored and shown in dashboard/profile views
 
-### 3) Adaptive Quiz Engine
+### 3. Adaptive Quiz and Recommendations
 
-- Recent attempts (scores + duration per question) are stored in `quiz_attempts`
-- The app recommends next difficulty (`easy`, `medium`, `hard`) per level
-- For larger quizzes, a configurable number of questions is selected adaptively
-- Question order is shuffled while avoiding repeated lead/question patterns
+- Quiz attempt history (score + time data) is stored per learner
+- Difficulty can be adapted (`easy`, `medium`, `hard`) based on recent attempts
+- For larger quizzes, question counts can be configured via environment variables
+- The app highlights stronger/weaker topics and recommends next learning steps
 
-### 4) Analytics and Recommendation
+### 4. Admin Content Management
 
-- Dashboard aggregates topic-wise attempts, average score, and average speed
-- Learners see strengths and weak areas
-- The system recommends a next lesson based on weakest current topic and progress state
+- Admin users can create, edit, and remove levels and lessons
+- Quiz question banks can be updated from the admin interface
+- User management supports account control operations
 
-### 5) Admin Content Management
+## Technical Overview
 
-- Admins can create/update/delete levels
-- Admins can manage lessons and quiz questions from UI
-- User management includes disable/enable and password reset actions
-
-## Technical Architecture
-
-### Backend
-
-- **Runtime:** Node.js + Express
-- **Templating:** EJS server-rendered views
-- **Persistence:** SQLite (`sqlite3`)
-- **Session store:** `connect-sqlite3`
-
-### Security and Reliability
-
-- `helmet` for secure headers and CSP
-- `express-rate-limit` to reduce abuse
-- `csurf` for CSRF protection in forms
-- `express-validator` for server-side input checks
-- Centralized error handling and request logging (`morgan`)
-
-### Key Modules
-
-- `server.js` – app bootstrap, middleware chain, route mounting
-- `routes/auth.js` – registration/login/logout flows
-- `routes/levels.js` – learner levels, quizzes, adaptive logic, analytics endpoint
-- `routes/admin.js` – admin content and user management
-- `models/User.js`, `models/Progress.js` – database access and domain operations
-- `config/database.js` – table creation and DB initialization
-- `data/levels.js` + `data/levelsStore.js` – default and editable content source
-
-## Data Model (High Level)
-
-- **users**: account identity, hashed password, disabled state
-- **progress**: per-user, per-level latest completion and score
-- **quiz_attempts**: attempt history with score, correctness counts, duration, difficulty
-- **sessions**: active session persistence for login state
-
-## Environment Configuration
-
-Copy `.env.example` to `.env` and set values:
-
-```env
-PORT=5000
-NODE_ENV=development
-SESSION_SECRET=change-this-to-a-strong-random-secret
-DATABASE_PATH=./civic_education.db
-PASSING_SCORE=70
-
-# Optional features
-MAX_CONCURRENT_USERS=100
-ADAPTIVE_QUIZ_QUESTION_COUNT=12
-MAX_PORT_RETRIES=10
-
-# Admin access control (recommended)
-ADMIN_EMAIL=admin@example.com
-```
-
-### Important Notes
-
-- Set `MAX_CONCURRENT_USERS=0` (or unset) to disable concurrent-user limiting
-- `ADAPTIVE_QUIZ_QUESTION_COUNT` controls adaptive quiz size for larger quizzes
-- In production, use a strong `SESSION_SECRET` and HTTPS
-
-## Getting Started
-
-### Prerequisites
-
-- Node.js `>=14` (recommended `>=16`)
-- npm `>=6`
-
-### Install
-
-```bash
-npm install
-```
-
-### Run
-
-```bash
-npm start
-```
-
-For development with auto-restart:
-
-```bash
-npm run dev
-```
-
-App URL: `http://localhost:5000`
-
-If port `5000` is already in use, the app automatically retries on the next ports (`5001`, `5002`, ...), up to `MAX_PORT_RETRIES`.
-Always use the exact URL printed in the startup log:
-
-```text
-✓ Civic Education App running on http://localhost:<active-port>
-```
-
-## Runtime Reliability / Troubleshooting
-
-- If startup fails with `EADDRINUSE`, either free the conflicting port or set a different `PORT` in `.env`
-- If `PORT` is invalid (non-numeric or out of range), the app falls back to `5000`
-- To allow more fallback attempts, increase `MAX_PORT_RETRIES`
-- If startup still exits with code `1`, check the first error line after `Failed to start server:` for the root cause
-
-## Scripts
-
-- `npm start` – run production server
-- `npm run dev` – run with nodemon
-- `npm run format` – format code with Prettier
-- `npm run check-format` – verify formatting
+- **Backend:** Node.js, Express
+- **Views:** EJS (server-rendered)
+- **Database:** SQLite (`sqlite3`)
+- **Sessions:** `connect-sqlite3`
+- **Security:** `helmet`, `express-rate-limit`, `csurf`, `express-validator`
+- **Observability:** `morgan` request logging
 
 ## Project Structure
 
 ```text
 civiceducator/
-   server.js
-   config/
-      database.js
-   data/
-      levels.js
-      levelsStore.js
-   middleware/
-      auth.js
-      concurrentUsers.js
-   models/
-      User.js
-      Progress.js
-   routes/
-      auth.js
-      levels.js
-      admin.js
-   views/
-      admin/
-      partials/
-   public/
-      css/
-      js/
-   Procfile
-   README.md
+  config/           # Database setup and initialization
+  controllers/      # Request handlers for auth, levels, admin
+  data/             # Level content and store utilities
+  middleware/       # Auth and concurrent-user controls
+  models/           # User and progress database operations
+  public/           # Static CSS/JS assets
+  routes/           # Route definitions (auth, levels, admin)
+  services/         # Business logic (analytics, quiz, profile)
+  validators/       # Input validation rules
+  views/            # EJS templates (learner + admin)
+  server.js         # Application bootstrap
 ```
 
-## Deployment Notes
+## Getting Started Locally
 
-- `Procfile` is included for Heroku-style process startup (`web: node server.js`)
-- SQLite works for small/single-instance deployments; for larger scale consider moving to managed DB
-- Ensure production env vars are configured in hosting platform
+### Prerequisites
 
-## Roadmap Ideas
+- Node.js `>=14`
+- npm `>=6`
 
-- More question metadata/tags for stronger difficulty classification
-- Explanation-based feedback after each question
-- Badges/streaks and richer engagement loops
-- Exportable analytics for teachers/program coordinators
+### Installation
 
-## Contribution
+```bash
+npm install
+```
 
-- Keep changes focused and consistent with existing style
-- Prefer small PRs with clear descriptions
-- Include validation steps for behavior changes
+### Environment Setup
+
+Create a `.env` file in the project root and configure at least:
+
+```env
+PORT=5000
+NODE_ENV=development
+SESSION_SECRET=your-strong-secret
+ADMIN_EMAIL=admin@example.com
+MAX_CONCURRENT_USERS=0
+ADAPTIVE_QUIZ_QUESTION_COUNT=12
+MAX_PORT_RETRIES=10
+```
+
+### Run the Application
+
+```bash
+npm start
+```
+
+Development mode:
+
+```bash
+npm run dev
+```
+
+## Scripts
+
+- `npm start` - Start the application
+- `npm run dev` - Start with nodemon for development
+- `npm run format` - Format files with Prettier
+- `npm run check-format` - Check formatting
+
+## Deployment
+
+The application is deployed on Render:
+
+- https://civiceducator.onrender.com/
+
+`Procfile` is included for web process startup:
+
+```text
+web: node server.js
+```
 
 ## License
 
-This project currently uses the license defined in `package.json`. Update as needed for distribution.
+ISC
