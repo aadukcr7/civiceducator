@@ -708,6 +708,34 @@ main {
   padding: 4px 10px;
 }
 
+.floating-assistant-btn {
+  position: fixed;
+  right: 1.25rem;
+  bottom: 1.25rem;
+  z-index: 1045;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 600;
+  padding: 0.8rem 1rem;
+  border-radius: 999px;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.floating-assistant-btn:hover {
+  color: var(--accent);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.24);
+}
+
+.floating-assistant-btn i {
+  font-size: 1.1rem;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .hero-section {
@@ -760,6 +788,16 @@ main {
   .navbar .nav-link {
     margin-left: 0;
     padding: 0.5rem 0;
+  }
+
+  .floating-assistant-btn {
+    right: 1rem;
+    bottom: 1rem;
+    padding: 0.72rem 0.9rem;
+  }
+
+  .floating-assistant-btn span {
+    display: none;
   }
 }
 
