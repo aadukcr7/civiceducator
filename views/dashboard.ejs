@@ -89,17 +89,6 @@
     <h4 class="mb-3">Per-Topic Performance</h4>
     <div id="topicAnalytics" class="row g-3 mb-5"></div>
 
-    <!-- Levels Grid -->
-    <h4 class="mb-4">Learning Levels</h4>
-    <div class="row g-4">
-      <div id="levelsContainer">
-        <div class="text-center">
-          <div class="spinner-border" role="status">
-            <span class="visually-hidden">Loading...</span>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 </main>
 
@@ -178,37 +167,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     renderAnalytics(data.analytics);
 
-    // Render levels
-    const container = document.getElementById('levelsContainer');
-    container.innerHTML = '';
-
-    data.allLevels.forEach(level => {
-      const completedLevel = data.completedLevels.find(l => l.id === level.id);
-      const isCompleted = !!completedLevel;
-      
-      const levelCard = document.createElement('div');
-      levelCard.className = 'col-lg-4';
-      levelCard.innerHTML = `
-        <div class="level-card ${isCompleted ? 'completed' : ''}">
-          <div class="level-icon">${level.icon}</div>
-          <h5>${level.title}</h5>
-          <p>${level.description}</p>
-          ${isCompleted ? `
-            <div class="mb-3">
-              <span class="badge bg-success">✓ Completed</span>
-              <p class="mb-0"><small>Score: ${completedLevel.score}%</small></p>
-            </div>
-          ` : ''}
-          <a href="/levels/${level.id}" class="btn btn-primary btn-sm">
-            ${isCompleted ? 'Review' : 'Start Learning'}
-          </a>
-        </div>
-      `;
-      container.appendChild(levelCard);
-    });
   } catch (error) {
     console.error('Error loading dashboard:', error);
-    document.getElementById('levelsContainer').innerHTML = '<div class="alert alert-danger">Error loading dashboard data</div>';
   }
 });
 </script>
