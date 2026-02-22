@@ -297,6 +297,10 @@ Open the app at:
 
 Hosted on Render: https://civiceducator.onrender.com/
 
+Health check endpoint:
+
+- `GET /healthz` returns app status, uptime, and server timestamp.
+
 `Procfile` process definition:
 
 ```text
