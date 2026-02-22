@@ -144,6 +144,15 @@ app.get('/about', isNotAuthenticated, (req, res) => {
   res.render('about');
 });
 
+// Health check endpoint (for uptime monitors and platform probes)
+app.get('/healthz', (req, res) => {
+  res.status(200).json({
+    status: 'ok',
+    uptime: Math.round(process.uptime()),
+    timestamp: new Date().toISOString(),
+  });
+});
+
 // Dashboard
 app.get('/dashboard', isAuthenticated, (req, res) => {
   res.render('dashboard');
