@@ -4,12 +4,14 @@ const emailValidation = body('email')
   .trim()
   .isLength({ min: 6, max: 254 })
   .withMessage('Email must be between 6 and 254 characters')
+  .matches(/^[a-z]/)
+  .withMessage('Email must start with a lowercase letter')
   .isEmail({
     allow_utf8_local_part: false,
     allow_ip_domain: false,
     require_tld: true,
   })
-  .withMessage('Invalid email address')
+  .withMessage('Invalid email address. Use format like name@example.com')
   .normalizeEmail({
     gmail_remove_dots: false,
     gmail_remove_subaddress: false,
