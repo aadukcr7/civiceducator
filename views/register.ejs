@@ -30,8 +30,9 @@
             <input type="email" class="form-control" id="email" name="email" 
               placeholder="Enter your email" value="<%= (old && old.email) ? old.email : '' %>" required
               inputmode="email" autocomplete="email"
-              pattern="^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}$"
-              title="Enter a valid email address (example: name@example.com).">
+              pattern="^[a-z][A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]*@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}$"
+              title="Use format like name@example.com and start with a lowercase letter.">
+            <small class="form-text text-muted">Use format like <strong>name@example.com</strong> (must start with a lowercase letter).</small>
           </div>
 
           <div class="mb-3">
