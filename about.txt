@@ -1,0 +1,425 @@
+Civic Education Nepal - Project About File
+Last Updated: 2026-04-21
+
+==================================================
+1) PROJECT IDENTITY
+==================================================
+Project Name: Civic Education Nepal
+Package Name: civic-education-nepal
+Version: 1.0.0
+Author: Aadii
+License: ISC
+Repository: https://github.com/aadukcr7/civic.git
+Live URL: https://civiceducator.onrender.com/
+
+Short Description:
+A full-stack civic learning platform focused on Nepal that teaches constitutional rights, civic duties, and public participation through structured levels, lessons, quizzes, analytics, and admin-managed content.
+
+Primary Goal:
+Turn civic education into a measurable and guided learning journey (not just static information pages).
+
+==================================================
+2) TECHNOLOGY STACK
+==================================================
+Runtime and Backend:
+- Node.js (engine >=14.0.0)
+- Express 4
+
+Frontend Rendering:
+- EJS templates (server-side rendered views)
+- Static assets served from public/css and public/js
+
+Database and Persistence:
+- SQLite3 database file (default: civic_education.db)
+- SQLite-backed session storage via connect-sqlite3
+
+Security and Middleware:
+- helmet (HTTP security headers + CSP)
+- express-rate-limit (global request throttling)
+- csurf (CSRF protection using session token)
+- express-session (session management)
+- bcryptjs (password hashing)
+- express-validator (input validation)
+- compression (gzip/deflate response compression)
+- morgan (HTTP request logging)
+- dotenv (environment variable loading)
+
+Dev Tools:
+- nodemon (development server auto-reload)
+- prettier (formatting)
+
+Deployment:
+- Render (Procfile: web: node server.js)
+
+==================================================
+3) MAIN APPLICATION BEHAVIOR
+==================================================
+Core Functional Areas:
+- Authentication (register, login, logout)
+- User profile and learning history
+- Structured learning levels with lesson content
+- Level quizzes with adaptive difficulty guidance
+- Quiz scoring, progress persistence, and result reporting
+- Dashboard analytics (strengths, weak areas, recommendations)
+- Authenticated lesson-grounded chatbot assistant
+- Admin panel for managing users, levels, lessons, and quiz questions
+- Guest-only About page walkthrough
+
+High-Level User Journey:
+1. User visits home page.
+2. User registers or logs in.
+3. User opens levels and studies lesson content.
+4. User attempts quiz for a level.
+5. App scores answers, stores progress and attempt metrics.
+6. User checks dashboard/profile for insights.
+7. User can ask the chatbot lesson-grounded questions.
+8. Admin can update educational content and manage users.
+
+==================================================
+4) PROJECT STRUCTURE AND RESPONSIBILITIES
+==================================================
+Root:
+- server.js: Application bootstrap, middleware wiring, routing, error handling, port retry start logic.
+- package.json: metadata, scripts, dependencies.
+- Procfile: deployment process command.
+- README.md: detailed documentation and setup guide.
+
+Configuration:
+- config/database.js:
+  - opens SQLite connection (DATABASE_PATH override supported)
+  - creates core tables if missing
+  - ensures users.is_disabled column exists
+  - creates quiz_attempts indexes
+
+Routes:
+- routes/auth.js:
+  - /auth/register (GET/POST)
+  - /auth/login (GET/POST)
+  - /auth/logout
+  - /auth/delete-account
+  - /auth/reset-learning-data
+- routes/levels.js (auth required for all):
+  - /levels
+  - /levels/data/dashboard
+  - /levels/:levelId
+  - /levels/:levelId/quiz (GET/POST)
+- routes/admin.js (auth + admin required):
+  - admin dashboard, users, levels, lessons, quiz CRUD
+- routes/chatbot.js (auth required):
+  - /chatbot
+  - /chatbot/ask
+
+Controllers:
+- controllers/authController.js:
+  registration/login/logout + account deletion + learning data reset
+- controllers/levelsController.js:
+  levels view, quiz rendering, quiz submission, dashboard JSON analytics
+- controllers/adminController.js:
+  admin dashboards and all content/user management handlers
+- controllers/chatbotController.js:
+  chatbot page and question-answer API endpoint
+
+Services:
+- services/authAccountService.js:
+  session lifecycle helpers, credential validation, message mapping
+- services/levelsQuizService.js:
+  quiz pool building, randomization, anti-repeat behavior, adaptive difficulty recommendation
+- services/levelsAnalyticsService.js:
+  topic-level analytics, strengths/weaknesses ranking, next-lesson recommendation
+- services/profileService.js:
+  profile summary model preparation (studied levels, attempts, scores)
+- services/adminLevelsService.js:
+  admin business logic and payload parsing for content operations
+- services/chatbotService.js:
+  retrieval-style lesson assistant with confidence checks and citations
+
+Models:
+- models/User.js:
+  user creation, lookup, password verify/update, disable/enable, delete account, stats
+- models/Progress.js:
+  progress CRUD-style ops, global/user stats, quiz attempts read/write, reset learning data
+
+Data:
+- data/levels.js: default curriculum (levels, lessons, quizzes)
+- data/levelsStore.js:
+  reads default data and optional admin override JSON file (levels.admin.json)
+  persists admin edits to filesystem
+
+Middleware:
+- middleware/auth.js:
+  isAuthenticated, isNotAuthenticated, isAdmin
+- middleware/concurrentUsers.js:
+  optional concurrent active-session limiter with in-memory session tracking
+
+Validation:
+- validators/authValidators.js: auth input rules
+- validators/adminValidators.js: admin content input rules
+
+Views:
+- public-facing and authenticated pages in views/*.ejs
+- admin views in views/admin/*.ejs
+- shared partials in views/partials
+
+Static Assets:
+- public/css/style.css
+- public/js/script.js
+- images/ for docs/UI previews
+
+Tests:
+- __tests__/ directory exists (test script currently placeholder in package.json)
+
+==================================================
+5) DATA MODEL (SQLITE)
+==================================================
+Database default file:
+- civic_education.db (root-level by default)
+
+Tables:
+1) users
+- id (PK)
+- username (unique)
+- email (unique)
+- password (hashed)
+- is_disabled (0/1)
+- created_at
+
+2) progress
+- id (PK)
+- user_id (FK users.id)
+- level_id
+- completed (0/1)
+- score
+- completed_at
+- unique(user_id, level_id)
+
+3) quiz_attempts
+- id (PK)
+- user_id (FK users.id)
+- level_id
+- score
+- correct_count
+- total_questions
+- duration_seconds
+- difficulty (easy|medium|hard expected)
+- created_at
+
+Indexes on quiz_attempts:
+- (user_id, level_id, created_at DESC)
+- (user_id, created_at DESC)
+
+4) sessions
+- sid (PK)
+- sess
+- expired
+(used by connect-sqlite3 session store)
+
+==================================================
+6) SECURITY IMPLEMENTATION DETAILS
+==================================================
+Security Controls Implemented:
+- Password hashing with bcryptjs (10 salt rounds)
+- Session cookies configured with:
+  - httpOnly: true
+  - sameSite: lax
+  - secure: true in production
+- CSRF protection enabled globally after session setup
+- Helmet with CSP directives restricting sources
+- Rate limiting (100 requests / 15 minutes per IP)
+- Input validation using express-validator in auth/admin flows
+- Admin access gate based on configured ADMIN_EMAIL
+- Disabled account checks on login
+- Generic error handling with reduced detail in production
+
+Additional Guardrails:
+- Auth middleware preserves intended destination via req.session.returnTo
+- Concurrent user limiter can block new logins/registers if max active reached
+
+==================================================
+7) ADAPTIVE QUIZ AND LEARNING LOGIC
+==================================================
+Quiz Generation:
+- Quiz pool combines existing level quiz data plus lesson-derived questions (when enough lessons exist)
+- Attempt question set is randomized
+- Anti-repeat behavior avoids repeating same lead signatures and same full order across attempts
+
+Adaptive Difficulty Recommendation:
+- Uses recent attempts (default last 3) and response speed metrics
+- Classifies suggested difficulty among easy/medium/hard
+- Fast and high-scoring patterns push toward hard
+- Low-scoring or slow patterns push toward easy
+
+Scoring and Completion:
+- Score computed as percent correct
+- Passing threshold: 70%
+- Progress row saved/updated per user+level
+- Detailed attempt metrics saved for analytics
+
+==================================================
+8) DASHBOARD AND PROFILE ANALYTICS
+==================================================
+Dashboard Data Endpoint:
+- /levels/data/dashboard returns:
+  - aggregate stats
+  - topic-level analytics
+  - strengths
+  - weak areas
+  - recommended next lesson
+
+Analytics Factors:
+- average score per topic
+- average seconds per question
+- attempts count and completion status
+- derived recommendation reason
+
+Profile Page Model Includes:
+- user information
+- studied levels and lesson counts
+- attempts count, pass count, average score, best score
+- total questions attempted and total correct answers
+- attempt list with mapped level titles
+
+==================================================
+9) CHATBOT (LESSON-GROUNDED ASSISTANT)
+==================================================
+Design:
+- Available only to authenticated users
+- Endpoint: POST /chatbot/ask
+
+How it answers:
+- Loads lessons from current content store
+- Tokenizes question and lesson documents
+- Computes cosine-like overlap score
+- Selects top matches above minimum score threshold
+- Extracts evidence sentences from lesson content
+- Returns answer with citations and confidence value
+
+Safety/Fallback Behavior:
+- If confidence is too low, returns fallback "I don't know" style response
+- Avoids pretending certainty without lesson support
+
+Response payload fields include:
+- answer
+- confidence
+- sources
+- citations
+- isFallback
+
+==================================================
+10) CONTENT MANAGEMENT (ADMIN)
+==================================================
+Admin can:
+- View platform stats summary
+- View users and toggle disable/enable status
+- Reset a user password to generated temporary password
+- Create/edit/delete levels
+- Create/edit/delete lessons per level
+- Create/edit/delete quiz questions per level
+
+Content Persistence Strategy:
+- Initial default curriculum comes from data/levels.js
+- Admin edits are stored in data/levels.admin.json
+- levelsStore reads admin JSON if present; otherwise uses defaults
+
+==================================================
+11) FRONTEND/UI NOTES
+==================================================
+Rendering model:
+- Server-rendered EJS templates for all pages
+
+Styling:
+- Custom CSS theme in public/css/style.css
+- Uses CSS variables and responsive page sections
+
+Client-side behavior:
+- password visibility toggles
+- password strength indicator on register form
+- lesson sidebar scroll/jump controls
+- smooth scrolling on lesson links
+- quiz form validation requiring all answers
+- global submit button loading state
+- simple toast notifications helper
+
+==================================================
+12) ENVIRONMENT VARIABLES
+==================================================
+Documented variables in README:
+- PORT (default 5000)
+- NODE_ENV (development/production)
+- SESSION_SECRET
+- ADMIN_EMAIL
+- MAX_CONCURRENT_USERS
+- ADAPTIVE_QUIZ_QUESTION_COUNT
+- MAX_PORT_RETRIES
+
+Observed in runtime code:
+- PORT
+- NODE_ENV
+- SESSION_SECRET
+- ADMIN_EMAIL
+- MAX_CONCURRENT_USERS
+- MAX_PORT_RETRIES
+- DATABASE_PATH (used by database config)
+
+Note:
+- ADAPTIVE_QUIZ_QUESTION_COUNT is documented but the current quiz service uses an internal constant for per-attempt question count.
+
+==================================================
+13) STARTUP, SCRIPTS, AND OPERATIONS
+==================================================
+NPM Scripts:
+- npm start: starts production/server mode (node server.js)
+- npm run dev: nodemon watch mode
+- npm run format: prettier write for js/json/css/md/yml/yaml
+- npm run check-format: prettier check
+- npm test: placeholder (returns error/no tests specified)
+
+Startup behavior:
+- validates/normalizes starting port
+- retries next port automatically if port is occupied
+- configurable max retries via MAX_PORT_RETRIES
+
+Health endpoint:
+- GET /healthz => status, uptime, timestamp
+
+==================================================
+14) DEPENDENCIES SUMMARY
+==================================================
+Production dependencies:
+- bcryptjs
+- compression
+- connect-sqlite3
+- csurf
+- dotenv
+- ejs
+- express
+- express-rate-limit
+- express-session
+- express-validator
+- helmet
+- morgan
+- sqlite3
+
+Development dependencies:
+- nodemon
+- prettier
+
+==================================================
+15) LIMITATIONS AND IMPROVEMENT AREAS
+==================================================
+Current limitations:
+- SQLite is simple and reliable for small/medium usage, but not ideal for high concurrency at scale.
+- No active automated test suite configured in package scripts.
+- In-memory concurrent user limiter is process-local (not shared across multiple instances).
+- Some documented env vars are not fully wired into quiz behavior at runtime.
+
+Possible future enhancements:
+- Add real test suite (unit/integration/e2e)
+- Move to managed SQL database for scale
+- Add distributed session/concurrency controls for multi-instance deployment
+- Expose adaptive quiz settings through config/env and admin UI
+- Add exportable analytics and localization support
+
+==================================================
+16) QUICK ONE-LINE SUMMARY
+==================================================
+Civic Education Nepal is a secure Node.js + Express + EJS civic learning platform with SQLite persistence, adaptive quizzes, progress analytics, grounded chatbot assistance, and full admin content/user management workflows.
