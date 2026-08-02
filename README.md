@@ -230,15 +230,16 @@ These are key interfaces of the live system:
 
 ```text
 civiceducator/
-  config/           # Database setup and initialization
-  controllers/      # Request handlers for auth, levels, admin
-  data/             # Level content and store utilities
-  middleware/       # Auth and concurrent-user controls
-  models/           # User and progress database operations
+  src/
+    config/         # Database setup and initialization
+    controllers/    # Request handlers for auth, levels, admin
+    data/           # Level content and store utilities
+    middleware/     # Auth and concurrent-user controls
+    models/         # User and progress database operations
+    routes/         # Route definitions (auth, levels, admin, chatbot)
+    services/       # Business logic (analytics, quiz, profile, chatbot)
+    validators/     # Input validation rules
   public/           # Static CSS/JS assets
-  routes/           # Route definitions (auth, levels, admin, chatbot)
-  services/         # Business logic (analytics, quiz, profile, chatbot)
-  validators/       # Input validation rules
   views/            # EJS templates (learner + admin)
   server.js         # Application bootstrap
 ```

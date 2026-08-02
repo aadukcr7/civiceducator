@@ -9,14 +9,14 @@ const morgan = require('morgan');
 const path = require('path');
 require('dotenv').config();
 
-require('./config/database');
-const authRoutes = require('./routes/auth');
-const levelsRoutes = require('./routes/levels');
-const adminRoutes = require('./routes/admin');
-const chatbotRoutes = require('./routes/chatbot');
-const { getProfileViewModel } = require('./services/profileService');
-const { isAuthenticated, isNotAuthenticated } = require('./middleware/auth');
-const { createConcurrentUserLimiter } = require('./middleware/concurrentUsers');
+require('./src/config/database');
+const authRoutes = require('./src/routes/auth');
+const levelsRoutes = require('./src/routes/levels');
+const adminRoutes = require('./src/routes/admin');
+const chatbotRoutes = require('./src/routes/chatbot');
+const { getProfileViewModel } = require('./src/services/profileService');
+const { isAuthenticated, isNotAuthenticated } = require('./src/middleware/auth');
+const { createConcurrentUserLimiter } = require('./src/middleware/concurrentUsers');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -26,9 +26,7 @@ const MAX_PORT_RETRIES = Number(process.env.MAX_PORT_RETRIES) || 10;
 function getStartPort() {
   const parsed = Number(PORT);
   if (!Number.isInteger(parsed) || parsed <= 0 || parsed > 65535) {
-    console.warn(
-      `Invalid PORT value "${PORT}". Falling back to default port 5000.`
-    );
+    console.warn(`Invalid PORT value "${PORT}". Falling back to default port 5000.`);
     return 5000;
   }
   return parsed;
@@ -46,22 +44,27 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 // Security middleware
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"],
-      fontSrc: ["'self'", "https://cdn.jsdelivr.net"],
-      imgSrc: ["'self'", 'data:', 'https:'],
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'", 'https://cdn.jsdelivr.net'],
+        scriptSrc: ["'self'", "'unsafe-inline'", 'https://cdn.jsdelivr.net'],
+        fontSrc: ["'self'", 'https://cdn.jsdelivr.net'],
+        imgSrc: ["'self'", 'data:', 'https:'],
+      },
     },
-  },
-  hsts: process.env.NODE_ENV === 'production' ? {
-    maxAge: 31536000,
-    includeSubDomains: true,
-    preload: true,
-  } : false,
-}));
+    hsts:
+      process.env.NODE_ENV === 'production'
+        ? {
+            maxAge: 31536000,
+            includeSubDomains: true,
+            preload: true,
+          }
+        : false,
+  })
+);
 
 // Rate limiting: 100 requests per 15 minutes
 const limiter = rateLimit({
@@ -219,9 +222,7 @@ function startServer(port, retryCount = 0) {
       console.error(
         `Failed to bind after ${MAX_PORT_RETRIES + 1} attempts starting from port ${port - retryCount}.`
       );
-      console.error(
-        'Set PORT to a free port or increase MAX_PORT_RETRIES in your environment.'
-      );
+      console.error('Set PORT to a free port or increase MAX_PORT_RETRIES in your environment.');
       process.exit(1);
       return;
     }
