@@ -45,9 +45,7 @@ function buildLessonDerivedQuizQuestions(level) {
   return lessons.map((lesson) => {
     const correctTitle = lesson.title;
     const distractors = shuffleArray(
-      lessons
-        .filter((item) => item.id !== lesson.id)
-        .map((item) => item.title)
+      lessons.filter((item) => item.id !== lesson.id).map((item) => item.title)
     ).slice(0, 3);
 
     const options = shuffleArray([correctTitle, ...distractors]);

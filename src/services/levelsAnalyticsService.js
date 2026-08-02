@@ -48,9 +48,9 @@ function buildDashboardAnalytics(levels, allProgress, attempts) {
     const levelAttempts = attemptsByLevel[level.id] || [];
     const avgScore = levelAttempts.length
       ? Math.round(
-        levelAttempts.reduce((sum, item) => sum + (Number(item.score) || 0), 0) /
+          levelAttempts.reduce((sum, item) => sum + (Number(item.score) || 0), 0) /
             levelAttempts.length
-      )
+        )
       : null;
     const avgSecondsPerQuestion = levelAttempts.length
       ? getAverageSecondsPerQuestion(levelAttempts)

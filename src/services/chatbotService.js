@@ -217,9 +217,7 @@ async function askLessonAssistant(question) {
     .sort((left, right) => right.score - left.score);
 
   const topScore = ranked[0]?.score || 0;
-  const topMatches = ranked
-    .filter((item) => item.score > MIN_MATCH_SCORE)
-    .slice(0, MAX_SOURCES);
+  const topMatches = ranked.filter((item) => item.score > MIN_MATCH_SCORE).slice(0, MAX_SOURCES);
 
   return buildResponse({
     topMatches,

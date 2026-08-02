@@ -63,9 +63,7 @@ async function getProfileViewModel(userId, query = {}) {
   const totalAttempts = attempts.length;
   const passedAttempts = attempts.filter((item) => (Number(item.score) || 0) >= 70).length;
   const averageScore = totalAttempts
-    ? Math.round(
-      attempts.reduce((sum, item) => sum + (Number(item.score) || 0), 0) / totalAttempts
-    )
+    ? Math.round(attempts.reduce((sum, item) => sum + (Number(item.score) || 0), 0) / totalAttempts)
     : 0;
   const bestScoreOverall = totalAttempts
     ? Math.max(...attempts.map((item) => Number(item.score) || 0))
